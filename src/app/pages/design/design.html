@@ -1,1 +1,84 @@
-<p>design works!</p>
+<div class="p-4">
+  <div class="flex gap-2 mb-4">
+    <p-button label="Выбрать треки" icon="pi pi-music" (onClick)="selectTracks()" />
+    <p-button
+      label="Назначить номера"
+      icon="pi pi-sort-amount-up"
+      (onClick)="assignNumbers()"
+      [disabled]="artists().length === 0"
+    />
+    <p-button
+      label="Сохранить"
+      icon="pi pi-download"
+      (onClick)="saveArtists()"
+      [disabled]="artists().length === 0"
+    />
+    <p-button
+      label="Загрузить"
+      icon="pi pi-upload"
+      (onClick)="loadArtists()"
+    />
+  </div>
+
+  <input
+    id="fileInput"
+    type="file"
+    accept=".mp3"
+    multiple
+    (change)="onFileSelect($event)"
+    class="hidden"
+  />
+
+  <input
+    id="loadFileInput"
+    type="file"
+    accept=".json"
+    (change)="onFileLoad($event)"
+    class="hidden"
+  />
+
+  @if (artists().length > 0) {
+    <p-table
+      #dt
+      [value]="artists()"
+      [tableStyle]="{ 'min-width': '20rem' }"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 25, 50, 100]"
+      [scrollable]="true"
+      scrollHeight="400px"
+      [globalFilterFields]="['number', 'name']"
+    >
+      <ng-template #caption>
+        <div class="flex justify-between items-center">
+          <span>Всего исполнителей: {{ artists().length }}</span>
+          <p-iconfield>
+            <p-inputicon styleClass="pi pi-search" />
+            <input
+              pInputText
+              type="text"
+              (input)="filterGlobal($event, 'contains')"
+              placeholder="Поиск..."
+            />
+          </p-iconfield>
+        </div>
+      </ng-template>
+      <ng-template #header>
+        <tr>
+          <th pSortableColumn="number">
+            № <p-sortIcon field="number" />
+          </th>
+          <th pSortableColumn="name">
+            Исполнитель <p-sortIcon field="name" />
+          </th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-artist>
+        <tr>
+          <td>{{ artist.number ?? '-' }}</td>
+          <td>{{ artist.name }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  }
+</div>
