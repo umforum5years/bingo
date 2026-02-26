@@ -43,8 +43,7 @@
                   "maximumError": "8kB"
                 }
               ],
-              "outputHashing": "all",
-              "baseHref": "/bingo/"
+              "outputHashing": "all"
             },
             "development": {
               "optimization": false,
