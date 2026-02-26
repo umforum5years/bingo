@@ -6,8 +6,7 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test",
-    "serve:ssr:umforum-bingo": "node dist/umforum-bingo/server/server.mjs"
+    "test": "ng test"
   },
   "prettier": {
     "printWidth": 100,
@@ -29,12 +28,9 @@
     "@angular/core": "^21.1.0",
     "@angular/forms": "^21.1.0",
     "@angular/platform-browser": "^21.1.0",
-    "@angular/platform-server": "^21.1.0",
     "@angular/router": "^21.1.0",
-    "@angular/ssr": "^21.1.0",
     "@primeng/themes": "^21.0.4",
     "@primeuix/themes": "^2.0.3",
-    "express": "^5.1.0",
     "primeicons": "^7.0.0",
     "primeng": "^21.1.1",
     "rxjs": "~7.8.0",
@@ -45,8 +41,6 @@
     "@angular/cli": "^21.1.0",
     "@angular/compiler-cli": "^21.1.0",
     "@tailwindcss/postcss": "^4.1.12",
-    "@types/express": "^5.0.1",
-    "@types/node": "^20.17.19",
     "jsdom": "^27.1.0",
     "postcss": "^8.5.3",
     "tailwindcss": "^4.1.12",
