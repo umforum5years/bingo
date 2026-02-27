@@ -8,13 +8,13 @@
       [disabled]="artists().length === 0"
     />
     <p-button
-      label="Сохранить"
+      label="Сохранить список исполнителей"
       icon="pi pi-download"
       (onClick)="saveArtists()"
       [disabled]="artists().length === 0"
     />
     <p-button
-      label="Загрузить"
+      label="Загрузить список исполнителей"
       icon="pi pi-upload"
       (onClick)="loadArtists()"
     />
@@ -179,24 +179,56 @@
       [disabled]="artists().filter(a => a.number !== null).length === 0"
     />
     @if (bingoCards().length > 0) {
-      <p-button
-        label="Сохранить в JSON"
-        icon="pi pi-save"
-        severity="success"
-        (onClick)="saveBingoCardsJson()"
-      />
-      <p-button
-        label="Загрузить из JSON"
-        icon="pi pi-upload"
-        severity="info"
-        (onClick)="loadBingoCardsJson()"
-      />
-      <p-button
-        label="Очистить"
-        icon="pi pi-trash"
-        severity="danger"
-        (onClick)="clearBingoCards()"
-      />
+      <div class="flex gap-2 flex-wrap">
+        <p-button
+          label="Сохранить в Word"
+          icon="pi pi-file-word"
+          severity="primary"
+          (onClick)="saveToWord()"
+        />
+        <p-button
+          label="Сохранить в JSON"
+          icon="pi pi-save"
+          severity="success"
+          (onClick)="saveBingoCardsJson()"
+        />
+        <p-button
+          label="Загрузить из JSON"
+          icon="pi pi-upload"
+          severity="info"
+          (onClick)="loadBingoCardsJson()"
+        />
+        <p-button
+          label="Очистить"
+          icon="pi pi-trash"
+          severity="danger"
+          (onClick)="clearBingoCards()"
+        />
+      </div>
+
+      <div class="orientation-selector">
+        <label class="block text-sm font-medium mb-2">Ориентация страницы:</label>
+        <div class="flex gap-2">
+          <button
+            type="button"
+            class="orientation-btn"
+            [class.active]="pageOrientation() === 'portrait'"
+            (click)="pageOrientation.set('portrait')"
+          >
+            <span class="orientation-icon portrait">📄</span>
+            <span>Портретная</span>
+          </button>
+          <button
+            type="button"
+            class="orientation-btn"
+            [class.active]="pageOrientation() === 'landscape'"
+            (click)="pageOrientation.set('landscape')"
+          >
+            <span class="orientation-icon landscape">📄</span>
+            <span>Альбомная</span>
+          </button>
+        </div>
+      </div>
     }
   </div>
 

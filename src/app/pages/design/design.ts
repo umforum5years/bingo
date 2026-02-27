@@ -6,7 +6,22 @@ import { InputIcon } from 'primeng/inputicon';
 import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
-import { Table, TableModule } from 'primeng/table';
+import { Table as PrimeTable, TableModule } from 'primeng/table';
+import {
+  Document,
+  Packer,
+  Table,
+  TableRow,
+  TableCell,
+  WidthType,
+  ImageRun,
+  Paragraph,
+  TextRun,
+  AlignmentType,
+  BorderStyle,
+  PageOrientation,
+} from 'docx';
+import { saveAs } from 'file-saver';
 
 interface Artist {
   name: string;
@@ -46,7 +61,7 @@ interface GridSize {
   styleUrl: './design.css',
 })
 export class Design {
-  @ViewChild('dt') dt!: Table;
+  @ViewChild('dt') dt!: PrimeTable;
   protected readonly artists = signal<Artist[]>([]);
   protected readonly selectedFiles = signal<File[]>([]);
 
@@ -58,6 +73,7 @@ export class Design {
   protected readonly cardCount = signal<number>(1);
   protected readonly backgroundImage = signal<string | null>(null);
   protected readonly bingoCards = signal<BingoCard[]>([]);
+  protected readonly pageOrientation = signal<'portrait' | 'landscape'>('portrait');
 
   protected readonly gridSizes: GridSize[] = [
     { label: '5x5', value: 5 },
@@ -309,6 +325,158 @@ export class Design {
     a.download = `bingo-cards-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  protected async saveToWord(): Promise<void> {
+    const cards = this.bingoCards();
+    if (cards.length === 0) {
+      alert('Сначала создайте бланки');
+      return;
+    }
+
+    const orientation = this.pageOrientation();
+    const isPortrait = orientation === 'portrait';
+    const pageSize = isPortrait
+      ? { width: 11906, height: 16838 } // A4 portrait in twips
+      : { width: 16838, height: 11906 }; // A4 landscape in twips
+
+    // Фиксированный размер таблицы в зависимости от ориентации
+    const TWIPS_PER_CM = 567;
+    const tableWidthTwips = isPortrait
+      ? 18 * TWIPS_PER_CM  // Портретная: 18x18 см
+      : 18 * TWIPS_PER_CM; // Альбомная: 18x16 см (ширина)
+    const tableHeightTwips = isPortrait
+      ? 18 * TWIPS_PER_CM  // Портретная: 18 см высота
+      : 16 * TWIPS_PER_CM; // Альбомная: 16 см высота
+
+    // Поля в зависимости от ориентации
+    const margin = isPortrait
+      ? { top: 2835, right: 567, bottom: 2835, left: 567 } // Портретная: 5см/1см/5см/1см
+      : { top: 567, right: 567, bottom: 567, left: 567 }; // Альбомная: 1см/1см/1см/1см
+
+    // Конвертация base64 изображения в Uint8Array
+    let backgroundImageData: Uint8Array | null = null;
+    if (this.backgroundImage()) {
+      const base64Data = this.backgroundImage()!.split(',')[1];
+      const binaryString = window.atob(base64Data!);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      backgroundImageData = bytes;
+    }
+
+    const size = this.getEffectiveGridSize();
+    const cellWidth = Math.floor(tableWidthTwips / size);
+    const cellHeight = Math.floor(tableHeightTwips / size);
+
+    const docChildren: any[] = [];
+
+    cards.forEach((card, cardIndex) => {
+      const tableRows: TableRow[] = [];
+
+      for (let row = 0; row < size; row++) {
+        const cells: TableCell[] = [];
+        for (let col = 0; col < size; col++) {
+          const cellIndex = row * size + col;
+          const cell = card.cells[cellIndex];
+          const cellText = this.getCellDisplay(cell);
+
+          cells.push(
+            new TableCell({
+              children: [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: cellText,
+                      size: 20,
+                      bold: true,
+                    }),
+                  ],
+                  alignment: AlignmentType.CENTER,
+                }),
+              ],
+              width: { size: cellWidth, type: WidthType.DXA },
+              verticalAlign: 'center',
+            })
+          );
+        }
+        tableRows.push(
+          new TableRow({
+            children: cells,
+            height: { value: cellHeight, rule: 'exact' },
+          })
+        );
+      }
+
+      const cardTable = new Table({
+        rows: tableRows,
+        width: { size: tableWidthTwips, type: WidthType.DXA },
+        alignment: AlignmentType.CENTER,
+      });
+
+      // Номер бланка по центру
+      const cardNumber = new Paragraph({
+        children: [
+          new TextRun({
+            text: `№${card.id}`,
+            size: 28,
+            bold: true,
+          }),
+        ],
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 0, after: 100 },
+      });
+
+      docChildren.push(cardNumber, cardTable);
+
+      if (cardIndex < cards.length - 1) {
+        docChildren.push(
+          new Paragraph({
+            pageBreakBefore: true,
+          })
+        );
+      }
+    });
+
+    const doc: Document = new Document({
+      background: {
+        color: 'FFFFFF',
+        ...(backgroundImageData && {
+          top: {
+            width: pageSize.width,
+            height: pageSize.height,
+            children: [
+              new ImageRun({
+                data: backgroundImageData,
+                transformation: {
+                  width: pageSize.width,
+                  height: pageSize.height,
+                },
+                type: 'png',
+              }),
+            ],
+          },
+        }),
+      },
+      sections: [
+        {
+          properties: {
+            page: {
+              size: {
+                width: pageSize.width,
+                height: pageSize.height,
+              },
+              margin,
+            },
+          },
+          children: docChildren,
+        },
+      ],
+    });
+
+    const blob = await Packer.toBlob(doc);
+    saveAs(blob, `bingo-cards-${new Date().toISOString().slice(0, 10)}.docx`);
   }
 
   protected loadBingoCardsJson(): void {
