@@ -1,1 +1,152 @@
-<p>play works!</p>
+<div class="play-container">
+  <h1 class="page-title">Игра</h1>
+
+  <div class="controls-section">
+    <div class="load-buttons">
+      <p-button
+        label="Загрузить список исполнителей"
+        icon="pi pi-users"
+        severity="info"
+        (onClick)="loadArtists()"
+      />
+      <p-button
+        label="Загрузить список бланков"
+        icon="pi pi-file-import"
+        severity="info"
+        (onClick)="loadBingoCards()"
+      />
+    </div>
+
+    <input
+      type="file"
+      id="loadArtistsFileInput"
+      accept=".json"
+      (change)="onArtistsFileLoad($event)"
+      style="display: none"
+    />
+    <input
+      type="file"
+      id="loadCardsFileInput"
+      accept=".json"
+      (change)="onCardsFileLoad($event)"
+      style="display: none"
+    />
+  </div>
+
+  @if (artists().length > 0) {
+    <div class="game-section">
+      <div class="draw-controls">
+        <div class="draw-buttons">
+          <p-button
+            label="Получить номер"
+            icon="pi pi-ticket"
+            severity="success"
+            (onClick)="drawRandomNumber()"
+            [disabled]="drawnNumbers().length >= artists().length"
+          />
+          <p-button
+            label="Сбросить игру"
+            icon="pi pi-refresh"
+            severity="warn"
+            (onClick)="resetGame()"
+          />
+        </div>
+
+        <div class="manual-input">
+          <label class="block text-sm font-medium mb-1">Или введите номер вручную:</label>
+          <div class="flex items-center gap-2">
+            <p-inputnumber
+              [(ngModel)]="manualNumber"
+              [min]="1"
+              [max]="artists().length"
+              placeholder="Номер"
+            />
+            <p-button
+              label="Добавить"
+              icon="pi pi-plus"
+              (onClick)="drawManualNumber()"
+            />
+          </div>
+        </div>
+      </div>
+
+      @if (drawnNumbers().length > 0) {
+        <div class="drawn-section">
+          <h2 class="section-title">
+            Выпавшие номера ({{ drawnNumbers().length }} из {{ totalNumbers() }})
+          </h2>
+          <div class="drawn-numbers">
+            @for (num of drawnNumbers(); track num) {
+              <span class="drawn-number" [pTooltip]="getArtistByNumber(num)">{{ num }}</span>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  @if (matchedCards().length > 0) {
+    <div class="matched-section">
+      <h2 class="section-title">Подходящие бланки</h2>
+      <div class="matched-cards">
+        @for (matched of matchedCards(); track matched.card.id; let i = $index) {
+          <p-card class="matched-card">
+            <ng-template #header>
+              <div class="matched-card-header">
+                <div class="matched-card-title-row">
+                  <span class="matched-card-title">Бланк №{{ matched.card.id ?? (i + 1) }}</span>
+                  @if (matched.card.gridSize) {
+                    <span class="matched-card-size">{{ matched.card.gridSize }}x{{ matched.card.gridSize }}</span>
+                  }
+                </div>
+                <span class="matched-card-progress">{{ matched.matchPercentage | number:'1.0-0' }}%</span>
+              </div>
+            </ng-template>
+            <div class="matched-card-content">
+              <div class="progress-bar">
+                <div 
+                  class="progress-fill" 
+                  [style.width.%]="matched.matchPercentage"
+                  [class.progress-fill-complete]="matched.matchPercentage === 100"
+                ></div>
+              </div>
+              <div class="matched-info">
+                <span class="matched-count">{{ matched.matchedCount }} из {{ matched.card.numbers.length }}</span>
+                <div class="completed-indicators">
+                  <span class="completed-indicator" [class.completed]="matched.completedRows > 0">
+                    <span class="indicator-icon">↔️</span>
+                    <span class="indicator-count">{{ matched.completedRows }}/{{ matched.card.gridSize || 5 }}</span>
+                  </span>
+                  <span class="completed-indicator" [class.completed]="matched.completedCols > 0">
+                    <span class="indicator-icon">↕️</span>
+                    <span class="indicator-count">{{ matched.completedCols }}/{{ matched.card.gridSize || 5 }}</span>
+                  </span>
+                </div>
+              </div>
+              <div 
+                class="matched-numbers"
+                [style.grid-template-columns]="'repeat(' + (matched.card.gridSize || 5) + ', 1fr)'"
+              >
+                @for (num of matched.card.numbers; track num) {
+                  <span 
+                    class="card-number" 
+                    [class.matched]="matched.matchedNumbers.includes(num)"
+                  >
+                    {{ num }}
+                  </span>
+                }
+              </div>
+              <div class="matched-artists">
+                @for (artist of matched.card.artists; track artist; let i = $index) {
+                  @if (matched.matchedNumbers.includes(matched.card.numbers[i])) {
+                    <span class="matched-artist">{{ artist }}</span>
+                  }
+                }
+              </div>
+            </div>
+          </p-card>
+        }
+      </div>
+    </div>
+  }
+</div>

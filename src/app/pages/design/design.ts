@@ -294,8 +294,10 @@ export class Design {
 
   protected saveBingoCardsJson(): void {
     const cards = this.bingoCards();
+    const size = this.getEffectiveGridSize();
     const compactData = cards.map((card) => ({
       id: card.id,
+      gridSize: size,
       numbers: card.cells.map((c) => c.number),
       artists: card.cells.map((c) => c.name),
     }));
