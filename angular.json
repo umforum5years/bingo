@@ -27,7 +27,8 @@
             "styles": [
               "src/styles.css"
             ],
-            "outputPath": "docs"
+            "outputPath": "docs",
+            "serviceWorker": "ngsw-config.json"
           },
           "configurations": {
             "production": {
