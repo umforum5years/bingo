@@ -311,9 +311,11 @@ export class Design {
   protected saveBingoCardsJson(): void {
     const cards = this.bingoCards();
     const size = this.getEffectiveGridSize();
+    const displayMode = this.displayMode();
     const compactData = cards.map((card) => ({
       id: card.id,
       gridSize: size,
+      displayMode,
       numbers: card.cells.map((c) => c.number),
       artists: card.cells.map((c) => c.name),
     }));
@@ -369,6 +371,7 @@ export class Design {
     const size = this.getEffectiveGridSize();
     const cellWidth = Math.floor(tableWidthTwips / size);
     const cellHeight = Math.floor(tableHeightTwips / size);
+    const displayMode = this.displayMode();
 
     const docChildren: any[] = [];
 
@@ -380,22 +383,65 @@ export class Design {
         for (let col = 0; col < size; col++) {
           const cellIndex = row * size + col;
           const cell = card.cells[cellIndex];
-          const cellText = this.getCellDisplay(cell);
+
+          const cellChildren: any[] = [];
+
+          if (displayMode === 'number') {
+            // Только номер
+            cellChildren.push(
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: cell.number.toString(),
+                    size: 32,
+                    bold: true,
+                  }),
+                ],
+                alignment: AlignmentType.CENTER,
+              })
+            );
+          } else if (displayMode === 'name') {
+            // Только название
+            cellChildren.push(
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: cell.name,
+                    size: 20,
+                  }),
+                ],
+                alignment: AlignmentType.CENTER,
+              })
+            );
+          } else {
+            // Название и номер
+            cellChildren.push(
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: cell.number.toString(),
+                    size: 32,
+                    bold: true,
+                  }),
+                ],
+                alignment: AlignmentType.CENTER,
+                spacing: { after: 50 },
+              }),
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: cell.name,
+                    size: 18,
+                  }),
+                ],
+                alignment: AlignmentType.CENTER,
+              })
+            );
+          }
 
           cells.push(
             new TableCell({
-              children: [
-                new Paragraph({
-                  children: [
-                    new TextRun({
-                      text: cellText,
-                      size: 20,
-                      bold: true,
-                    }),
-                  ],
-                  alignment: AlignmentType.CENTER,
-                }),
-              ],
+              children: cellChildren,
               width: { size: cellWidth, type: WidthType.DXA },
               verticalAlign: 'center',
             })

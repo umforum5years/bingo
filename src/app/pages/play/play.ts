@@ -11,9 +11,12 @@ interface Artist {
   number: number;
 }
 
+type DisplayMode = 'name' | 'number' | 'both';
+
 interface BingoCard {
   id: number;
   gridSize?: number;
+  displayMode?: DisplayMode;
   numbers: number[];
   artists: string[];
 }
