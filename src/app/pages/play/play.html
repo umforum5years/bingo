@@ -87,7 +87,7 @@
 
   @if (matchedCards().length > 0) {
     <div class="matched-section">
-      <h2 class="section-title">Подходящие бланки</h2>
+      <h2 class="section-title">Подходящие бланки: {{ matchedCards().length }}</h2>
       <div class="matched-cards">
         @for (matched of matchedCards(); track matched.card.id; let i = $index) {
           <p-card class="matched-card">

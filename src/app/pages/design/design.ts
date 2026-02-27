@@ -14,11 +14,9 @@ import {
   TableRow,
   TableCell,
   WidthType,
-  ImageRun,
   Paragraph,
   TextRun,
   AlignmentType,
-  BorderStyle,
   PageOrientation,
 } from 'docx';
 import { saveAs } from 'file-saver';
@@ -71,7 +69,6 @@ export class Design {
   protected readonly useCustomGrid = signal<boolean>(false);
   protected readonly displayMode = signal<DisplayMode>('both');
   protected readonly cardCount = signal<number>(1);
-  protected readonly backgroundImage = signal<string | null>(null);
   protected readonly bingoCards = signal<BingoCard[]>([]);
   protected readonly pageOrientation = signal<'portrait' | 'landscape'>('portrait');
 
@@ -185,31 +182,6 @@ export class Design {
         }
       };
       reader.readAsText(file);
-    }
-  }
-
-  protected onBackgroundImageSelect(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      const file = input.files[0];
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        this.backgroundImage.set(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  }
-
-  protected selectBackgroundImage(): void {
-    const fileInput = document.getElementById('bgImageInput') as HTMLInputElement;
-    fileInput?.click();
-  }
-
-  protected clearBackgroundImage(): void {
-    this.backgroundImage.set(null);
-    const fileInput = document.getElementById('bgImageInput') as HTMLInputElement;
-    if (fileInput) {
-      fileInput.value = '';
     }
   }
 
@@ -356,18 +328,6 @@ export class Design {
       ? { top: 2835, right: 567, bottom: 2835, left: 567 } // Портретная: 5см/1см/5см/1см
       : { top: 567, right: 567, bottom: 567, left: 567 }; // Альбомная: 1см/1см/1см/1см
 
-    // Конвертация base64 изображения в Uint8Array
-    let backgroundImageData: Uint8Array | null = null;
-    if (this.backgroundImage()) {
-      const base64Data = this.backgroundImage()!.split(',')[1];
-      const binaryString = window.atob(base64Data!);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-      backgroundImageData = bytes;
-    }
-
     const size = this.getEffectiveGridSize();
     const cellWidth = Math.floor(tableWidthTwips / size);
     const cellHeight = Math.floor(tableHeightTwips / size);
@@ -475,50 +435,34 @@ export class Design {
       });
 
       docChildren.push(cardNumber, cardTable);
+    });
 
-      if (cardIndex < cards.length - 1) {
-        docChildren.push(
-          new Paragraph({
-            pageBreakBefore: true,
-          })
-        );
-      }
+    // Создаём отдельные секции для каждой карточки
+    const sections = cards.map((card, cardIndex) => {
+      const cardDocChildren: any[] = [];
+
+      // Находим данные для этой карточки в docChildren
+      const cardNumber = docChildren[cardIndex * 2];
+      const cardTable = docChildren[cardIndex * 2 + 1];
+
+      cardDocChildren.push(cardNumber, cardTable);
+
+      return {
+        properties: {
+          page: {
+            size: {
+              width: pageSize.width,
+              height: pageSize.height,
+            },
+            margin,
+          },
+        },
+        children: cardDocChildren,
+      };
     });
 
     const doc: Document = new Document({
-      background: {
-        color: 'FFFFFF',
-        ...(backgroundImageData && {
-          top: {
-            width: pageSize.width,
-            height: pageSize.height,
-            children: [
-              new ImageRun({
-                data: backgroundImageData,
-                transformation: {
-                  width: pageSize.width,
-                  height: pageSize.height,
-                },
-                type: 'png',
-              }),
-            ],
-          },
-        }),
-      },
-      sections: [
-        {
-          properties: {
-            page: {
-              size: {
-                width: pageSize.width,
-                height: pageSize.height,
-              },
-              margin,
-            },
-          },
-          children: docChildren,
-        },
-      ],
+      sections,
     });
 
     const blob = await Packer.toBlob(doc);

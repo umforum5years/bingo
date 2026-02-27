@@ -1,5 +1,5 @@
 import { Component, signal } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterOutlet } from '@angular/router';
 import { Menubar } from 'primeng/menubar';
 
 @Component({
@@ -11,7 +11,7 @@ import { Menubar } from 'primeng/menubar';
 export class App {
   protected readonly title = signal('umforum-bingo');
   protected readonly menuItems = signal([
-    { label: 'Design', icon: 'pi pi-palette', routerLink: '/design' },
-    { label: 'Play', icon: 'pi pi-gamepad', routerLink: '/play' }
+    { label: 'Конструктор', icon: 'pi pi-palette', routerLink: '/design' },
+    { label: 'Игра', icon: 'pi pi-play', routerLink: '/play' }
   ]);
 }
