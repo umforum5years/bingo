@@ -81,4 +81,153 @@
       </ng-template>
     </p-table>
   }
+
+  <hr class="my-6" />
+
+  <h2 class="text-xl font-semibold mb-4">Генерация бланков Бинго</h2>
+
+  <div class="flex flex-wrap gap-4 mb-4 items-end">
+    <div>
+      <label class="block text-sm font-medium mb-1">Размер сетки</label>
+      <p-select
+        [options]="gridSizes"
+        [(ngModel)]="gridSize"
+        optionLabel="label"
+        optionValue="value"
+        [disabled]="useCustomGrid()"
+        placeholder="Выберите размер"
+      />
+    </div>
+
+    <div class="flex items-center gap-2 mb-4">
+<input
+  type="checkbox"
+  id="customGrid"
+  [checked]="useCustomGrid()"
+  (change)="useCustomGrid.set($event.target?.checked ?? false)"
+  class="w-4 h-4"
+/>
+      <label for="customGrid" class="text-sm font-medium">Свой размер</label>
+    </div>
+
+    @if (useCustomGrid()) {
+      <div>
+        <label class="block text-sm font-medium mb-1">Размер</label>
+        <p-inputnumber
+          [(ngModel)]="customGridSize"
+          [min]="2"
+          [max]="20"
+          placeholder="Например: 12"
+        />
+      </div>
+    }
+
+    <div>
+      <label class="block text-sm font-medium mb-1">Отображение</label>
+      <p-select
+        [options]="displayModes"
+        [(ngModel)]="displayMode"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Режим"
+      />
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium mb-1">Количество бланков</label>
+      <p-inputnumber
+        [(ngModel)]="cardCount"
+        [min]="1"
+        [max]="100"
+        placeholder="Например: 5"
+      />
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium mb-1">Фон</label>
+      <div class="flex gap-2">
+        <p-button
+          label="Загрузить"
+          icon="pi pi-image"
+          severity="secondary"
+          (onClick)="selectBackgroundImage()"
+        />
+        @if (backgroundImage()) {
+          <p-button
+            icon="pi pi-times"
+            severity="danger"
+            (onClick)="clearBackgroundImage()"
+          />
+        }
+      </div>
+    </div>
+
+    <input
+      id="bgImageInput"
+      type="file"
+      accept="image/*"
+      (change)="onBackgroundImageSelect($event)"
+      class="hidden"
+    />
+  </div>
+
+  <div class="flex gap-2 mb-4">
+    <p-button
+      label="Создать бланки"
+      icon="pi pi-plus"
+      (onClick)="generateBingoCards()"
+      [disabled]="artists().filter(a => a.number !== null).length === 0"
+    />
+    @if (bingoCards().length > 0) {
+      <p-button
+        label="Сохранить в JSON"
+        icon="pi pi-save"
+        severity="success"
+        (onClick)="saveBingoCardsJson()"
+      />
+      <p-button
+        label="Загрузить из JSON"
+        icon="pi pi-upload"
+        severity="info"
+        (onClick)="loadBingoCardsJson()"
+      />
+      <p-button
+        label="Очистить"
+        icon="pi pi-trash"
+        severity="danger"
+        (onClick)="clearBingoCards()"
+      />
+    }
+  </div>
+
+  <input
+    type="file"
+    id="loadCardsFileInput"
+    accept=".json"
+    (change)="onCardsFileLoad($event)"
+    style="display: none"
+  />
+
+  @if (bingoCards().length > 0) {
+    <div class="bingo-cards-container">
+      @for (card of bingoCards(); track card.id) {
+        <div class="bingo-card" [style.background-image]="backgroundImage() ? 'url(' + backgroundImage() + ')' : null">
+          <div class="bingo-card-header">
+            <span class="bingo-card-number">Бланк №{{ card.id }}</span>
+            <span class="bingo-card-size">{{ getEffectiveGridSize() }}x{{ getEffectiveGridSize() }}</span>
+          </div>
+          <div
+            class="bingo-grid"
+            [style.grid-template-columns]="'repeat(' + getEffectiveGridSize() + ', 1fr)'"
+          >
+            @for (cell of card.cells; track cell.number) {
+              <div class="bingo-cell">
+                <span class="bingo-cell-content">{{ getCellDisplay(cell) }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
 </div>
