@@ -1,6 +1,8 @@
 <div class="play-container">
   <h1 class="page-title">Игра</h1>
 
+  <app-fireworks [show]="showFireworks()" (finished)="showFireworks.set(false)" />
+
   <div class="controls-section">
     <div class="load-buttons">
       <p-button

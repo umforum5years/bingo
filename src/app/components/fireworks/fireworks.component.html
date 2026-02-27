@@ -1,0 +1,30 @@
+@if (show()) {
+  <div class="fireworks-overlay">
+    @for (particleSet of particles; track $index) {
+      <div
+        class="firework-container"
+        [style]="'
+          --delay: ' + ($index * 0.4) + 's;
+          --start-x: ' + positions[$index].x + '%;
+          --start-y: ' + positions[$index].y + '%;
+        '"
+      >
+        @for (particle of particleSet; track $index) {
+          <span
+            class="firework-particle"
+            [style]="'
+              --particle-x: var(--start-x);
+              --particle-y: var(--start-y);
+              --particle-vx: ' + particle.vx + ';
+              --particle-vy: ' + particle.vy + ';
+              --particle-color: ' + particle.color + ';
+              --particle-size: ' + particle.size + 'px;
+              --particle-decay: ' + particle.decay + ';
+              --particle-gravity: ' + particle.gravity + ';
+            '"
+          ></span>
+        }
+      </div>
+    }
+  </div>
+}

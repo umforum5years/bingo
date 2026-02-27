@@ -1,0 +1,122 @@
+.fireworks-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 10000;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.firework-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  animation: launchFirework 4s ease-out var(--delay) forwards;
+}
+
+.firework-particle {
+  position: absolute;
+  left: var(--particle-x);
+  top: var(--particle-y);
+  width: calc(var(--particle-size) * 2);
+  height: calc(var(--particle-size) * 2);
+  background: var(--particle-color);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: explode 3s ease-out forwards;
+  box-shadow: 
+    0 0 10px var(--particle-color),
+    0 0 20px var(--particle-color),
+    0 0 30px var(--particle-color),
+    0 0 40px var(--particle-color),
+    0 0 50px var(--particle-color);
+  filter: brightness(1.5);
+}
+
+@keyframes launchFirework {
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes explode {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: 
+      translate(
+        calc(var(--particle-vx) * 100px),
+        calc(var(--particle-vy) * 100px + var(--particle-gravity) * 300px)
+      )
+      scale(0);
+    opacity: 0;
+  }
+}
+
+/* Sparkle effect */
+.firework-particle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, white 0%, transparent 70%);
+  border-radius: 50%;
+  animation: sparkle 1.5s ease-out;
+}
+
+@keyframes sparkle {
+  0%, 100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.5);
+  }
+}
+
+/* Glow effect overlay */
+.fireworks-overlay::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+  animation: flashGlow 0.5s ease-out;
+}
+
+@keyframes flashGlow {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}

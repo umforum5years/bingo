@@ -1,10 +1,11 @@
-import { Component, signal, computed } from '@angular/core';
+import { Component, signal, computed, effect } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
 import { Button } from 'primeng/button';
 import { InputNumber } from 'primeng/inputnumber';
 import { Card } from 'primeng/card';
 import { Tooltip } from 'primeng/tooltip';
+import { FireworksComponent } from '../../components/fireworks/fireworks.component';
 
 interface Artist {
   name: string;
@@ -38,7 +39,8 @@ interface MatchedCard {
     Card,
     FormsModule,
     DecimalPipe,
-    Tooltip
+    Tooltip,
+    FireworksComponent
   ],
   templateUrl: './play.html',
   styleUrl: './play.css',
@@ -48,6 +50,8 @@ export class Play {
   protected readonly bingoCards = signal<BingoCard[]>([]);
   protected readonly drawnNumbers = signal<number[]>([]);
   protected readonly manualNumber = signal<number | null>(null);
+  protected readonly showFireworks = signal<boolean>(false);
+  protected readonly hadFullMatch = signal<Set<number>>(new Set());
 
   protected readonly matchedCards = computed<MatchedCard[]>(() => {
     const cards = this.bingoCards();
@@ -100,6 +104,29 @@ export class Play {
     return drawn.length > 0 ? drawn[drawn.length - 1] : null;
   });
 
+  constructor() {
+    effect(() => {
+      const matched = this.matchedCards();
+      const fullMatchCards = matched.filter(mc => mc.matchPercentage === 100);
+      
+      for (const card of fullMatchCards) {
+        if (!this.hadFullMatch().has(card.card.id)) {
+          console.log('Full match detected for card:', card.card.id);
+          this.hadFullMatch.update(set => {
+            const newSet = new Set(set);
+            newSet.add(card.card.id);
+            return newSet;
+          });
+          this.triggerFireworks();
+        }
+      }
+    }, { allowSignalWrites: true });
+  }
+
+  private triggerFireworks(): void {
+    this.showFireworks.set(true);
+  }
+
   protected loadArtists(): void {
     const fileInput = document.getElementById('loadArtistsFileInput') as HTMLInputElement;
     fileInput?.click();
@@ -116,6 +143,8 @@ export class Play {
           if (Array.isArray(json)) {
             this.artists.set(json);
             this.drawnNumbers.set([]);
+            this.hadFullMatch.set(new Set());
+            this.showFireworks.set(false);
           }
         } catch {
           console.error('Invalid JSON file');
@@ -140,6 +169,8 @@ export class Play {
           const json = JSON.parse(e.target?.result as string);
           if (Array.isArray(json)) {
             this.bingoCards.set(json);
+            this.hadFullMatch.set(new Set());
+            this.showFireworks.set(false);
           }
         } catch {
           console.error('Invalid JSON file');
@@ -204,6 +235,8 @@ export class Play {
 
   protected resetGame(): void {
     this.drawnNumbers.set([]);
+    this.hadFullMatch.set(new Set());
+    this.showFireworks.set(false);
   }
 
   protected getArtistByNumber(number: number): string {

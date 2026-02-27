@@ -1,0 +1,84 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Dark theme styles */
+:host-context(.dark-theme),
+.dark-theme {
+  --surface-0: #18181b;
+  --surface-50: #27272a;
+  --surface-100: #3f3f46;
+  --surface-200: #52525b;
+  --surface-300: #71717a;
+  --surface-400: #a1a1aa;
+  --surface-500: #d4d4d8;
+  --surface-600: #e4e4e7;
+  --surface-700: #f4f4f5;
+  --surface-800: #fafafa;
+  --surface-900: #ffffff;
+  
+  background-color: var(--surface-0);
+  color: var(--surface-500);
+}
+
+.dark-theme p-menubar {
+  background: var(--surface-50);
+  border-color: var(--surface-200);
+}
+
+.dark-theme p-menubar .p-menubar {
+  background: var(--surface-50);
+  border-color: var(--surface-200);
+}
+
+.dark-theme .p-menubar-root-list > .p-menuitem > .p-menuitem-content {
+  background: var(--surface-50);
+}
+
+.dark-theme .p-menubar-root-list > .p-menuitem > .p-menuitem-content:hover {
+  background: var(--surface-100);
+}
+
+.dark-theme .p-menubar-root-list > .p-menuitem > .p-menuitem-content .p-menuitem-link {
+  color: var(--surface-500);
+}
+
+.dark-theme .p-menubar-root-list > .p-menuitem > .p-menuitem-content:hover .p-menuitem-link {
+  color: var(--surface-900);
+}
+
+.dark-theme .p-menubar-button {
+  color: var(--surface-500);
+}
+
+.dark-theme .p-menubar-button:hover {
+  background: var(--surface-100);
+  color: var(--surface-900);
+}
+
+.dark-theme .p-menubar-submenu {
+  background: var(--surface-50);
+  border-color: var(--surface-200);
+}
+
+.dark-theme .p-menubar-submenu .p-menuitem-content {
+  background: var(--surface-50);
+}
+
+.dark-theme .p-menubar-submenu .p-menuitem-content:hover {
+  background: var(--surface-100);
+}
+
+.dark-theme .p-menubar-submenu .p-menuitem-link {
+  color: var(--surface-500);
+}
+
+.dark-theme .p-menubar-submenu .p-menuitem-link:hover {
+  color: var(--surface-900);
+}
+
+.dark-theme .p-menubar-submenu .p-menuitem-separator {
+  border-color: var(--surface-200);
+}
