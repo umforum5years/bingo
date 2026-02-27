@@ -77,7 +77,14 @@
           </h2>
           <div class="drawn-numbers">
             @for (num of drawnNumbers(); track num) {
-              <span class="drawn-number" [pTooltip]="getArtistByNumber(num)">{{ num }}</span>
+              <span 
+                class="drawn-number drawn-number-clickable" 
+                [pTooltip]="getArtistByNumber(num)"
+                (click)="removeDrawnNumber(num)"
+                title="Нажмите, чтобы удалить номер"
+              >
+                {{ num }}
+              </span>
             }
           </div>
         </div>

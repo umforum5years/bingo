@@ -177,22 +177,29 @@ export class Play {
     const number = this.manualNumber();
     const artists = this.artists();
     const drawn = this.drawnNumbers();
-    
+
     if (number === null) return;
-    
+
     const artistExists = artists.some((a) => a.number === number);
     if (!artistExists) {
       alert(`Номер ${number} не найден в списке исполнителей`);
       return;
     }
-    
+
     if (drawn.includes(number)) {
       alert(`Номер ${number} уже выпал`);
       return;
     }
-    
+
     this.drawnNumbers.update((nums) => [...nums, number]);
     this.manualNumber.set(null);
+  }
+
+  protected removeDrawnNumber(number: number): void {
+    const confirmed = confirm(`Удалить номер ${number} из выпавших? Он снова станет доступным для розыгрыша.`);
+    if (confirmed) {
+      this.drawnNumbers.update((nums) => nums.filter((n) => n !== number));
+    }
   }
 
   protected resetGame(): void {

@@ -78,6 +78,17 @@
   font-size: 0.875rem;
 }
 
+.drawn-number-clickable {
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.drawn-number-clickable:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  background: linear-gradient(135deg, #f56565 0%, #c53030 100%);
+}
+
 .matched-section {
   margin-top: 2rem;
 }
