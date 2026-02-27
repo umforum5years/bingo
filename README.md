@@ -210,9 +210,5 @@
 ## Развёртывание на GitHub Pages
 
 1. Соберите проект: `npm run build:gh`
-2. Опубликуйте ветку `gh-pages`:
-   ```bash
-   git subtree push --prefix docs origin gh-pages
-   ```
 
 Или используйте GitHub Actions для автоматического развёртывания.
