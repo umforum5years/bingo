@@ -18,6 +18,12 @@
       icon="pi pi-upload"
       (onClick)="loadArtists()"
     />
+    <p-button
+      label="Скачать список (txt)"
+      icon="pi pi-file"
+      (onClick)="downloadArtistsTxt()"
+      [disabled]="artists().length === 0"
+    />
   </div>
 
   <input

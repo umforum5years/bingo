@@ -161,6 +161,20 @@ export class Design {
     URL.revokeObjectURL(url);
   }
 
+  protected downloadArtistsTxt(): void {
+    const artists = this.artists();
+    const numberedArtists = artists
+      .map((artist, index) => `${index + 1}. ${artist.name}`)
+      .join('\n');
+    const blob = new Blob([numberedArtists], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'artists-list.txt';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   protected loadArtists(): void {
     const fileInput = document.getElementById('loadFileInput') as HTMLInputElement;
     fileInput?.click();
