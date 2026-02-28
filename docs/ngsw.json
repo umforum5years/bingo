@@ -1,0 +1,87 @@
+{
+  "configVersion": 1,
+  "timestamp": 1772280868874,
+  "index": "/bingo/index.html",
+  "assetGroups": [
+    {
+      "name": "app",
+      "installMode": "prefetch",
+      "updateMode": "prefetch",
+      "cacheQueryOptions": {
+        "ignoreVary": true
+      },
+      "urls": [
+        "/bingo/favicon.ico",
+        "/bingo/index.html",
+        "/bingo/main-O6WSCKC7.js",
+        "/bingo/manifest.webmanifest",
+        "/bingo/styles-PX4UXOCC.css"
+      ],
+      "patterns": []
+    },
+    {
+      "name": "assets",
+      "installMode": "lazy",
+      "updateMode": "prefetch",
+      "cacheQueryOptions": {
+        "ignoreVary": true
+      },
+      "urls": [
+        "/bingo/icons/icon.svg",
+        "/bingo/media/primeicons-4GST5W3O.woff2",
+        "/bingo/media/primeicons-DHQU4SEP.svg",
+        "/bingo/media/primeicons-GEFHGEHP.ttf",
+        "/bingo/media/primeicons-P53SE5CV.woff"
+      ],
+      "patterns": []
+    }
+  ],
+  "dataGroups": [
+    {
+      "name": "api-freshness",
+      "patterns": [],
+      "strategy": "freshness",
+      "maxSize": 100,
+      "maxAge": 86400000,
+      "cacheQueryOptions": {
+        "ignoreVary": true
+      },
+      "version": 1
+    }
+  ],
+  "hashTable": {
+    "/bingo/favicon.ico": "9c39f434fe1261f68c5e3eefdf734630d99c5670",
+    "/bingo/icons/icon.svg": "1e8fd80b3bcea8bfe8fa90ccd8a492d718b871cf",
+    "/bingo/index.html": "5fc94f984ccb048d16965ac4c5910d8525f2dc80",
+    "/bingo/main-O6WSCKC7.js": "78fd0f116235f11ec2766bf01f0c82e4d41dd29d",
+    "/bingo/manifest.webmanifest": "51e5c96ebc778407eb49c5946bed6ec193d8505a",
+    "/bingo/media/primeicons-4GST5W3O.woff2": "837c1279b6af9d297f34fdb43e6fcc9206a79f32",
+    "/bingo/media/primeicons-DHQU4SEP.svg": "a07ae39027c1a780b42fd82fad7575c2924d9d28",
+    "/bingo/media/primeicons-GEFHGEHP.ttf": "3b878ca7e88945a8ec25814810b95367d8977ae6",
+    "/bingo/media/primeicons-P53SE5CV.woff": "361e3af71bb4e515feead2f787348a92a5527158",
+    "/bingo/styles-PX4UXOCC.css": "7960a90583bbd205ee0007f0675cfc13f69fde47"
+  },
+  "navigationUrls": [
+    {
+      "positive": true,
+      "regex": "^\\/.*$"
+    },
+    {
+      "positive": false,
+      "regex": "^\\/(?:.+\\/)?[^/]*\\.[^/]*$"
+    },
+    {
+      "positive": false,
+      "regex": "^\\/(?:.+\\/)?[^/]*__$"
+    },
+    {
+      "positive": false,
+      "regex": "^\\/(?:.+\\/)?[^/]*__[^/]*\\/__$"
+    },
+    {
+      "positive": false,
+      "regex": "^\\/(?:.+\\/)?[^/]*__[^/]*\\/__\\/[^/]*$"
+    }
+  ],
+  "navigationRequestStrategy": "performance"
+}
