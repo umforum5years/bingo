@@ -144,7 +144,12 @@ export class Play {
         } else {
           const aTotal = a.completedRows + a.completedCols + a.completedDiagonals;
           const bTotal = b.completedRows + b.completedCols + b.completedDiagonals;
-          return bTotal - aTotal;
+          // Сначала сортируем по заполненным линиям
+          if (bTotal !== aTotal) {
+            return bTotal - aTotal;
+          }
+          // Если линии равны, сортируем по количеству совпадений
+          return b.matchedCount - a.matchedCount;
         }
       });
   });
