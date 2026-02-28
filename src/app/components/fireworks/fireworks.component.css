@@ -10,6 +10,10 @@
   background: rgba(0, 0, 0, 0.3);
 }
 
+:host-context(.dark-theme) .fireworks-overlay {
+  background: rgba(0, 0, 0, 0.5);
+}
+
 .firework-container {
   position: absolute;
   top: 0;
@@ -29,7 +33,7 @@
   border-radius: 50%;
   pointer-events: none;
   animation: explode 3s ease-out forwards;
-  box-shadow: 
+  box-shadow:
     0 0 10px var(--particle-color),
     0 0 20px var(--particle-color),
     0 0 30px var(--particle-color),
@@ -62,7 +66,7 @@
     opacity: 1;
   }
   100% {
-    transform: 
+    transform:
       translate(
         calc(var(--particle-vx) * 100px),
         calc(var(--particle-vy) * 100px + var(--particle-gravity) * 300px)

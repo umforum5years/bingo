@@ -82,3 +82,136 @@
 .dark-theme .p-menubar-submenu .p-menuitem-separator {
   border-color: var(--surface-200);
 }
+
+/* Table dark theme */
+.dark-theme .p-datatable .p-datatable-thead > tr > th {
+  background-color: var(--surface-100);
+  color: var(--surface-500);
+  border-color: var(--surface-200);
+}
+
+.dark-theme .p-datatable .p-datatable-tbody > tr > td {
+  background-color: var(--surface-50);
+  color: var(--surface-500);
+  border-color: var(--surface-200);
+}
+
+.dark-theme .p-datatable .p-datatable-tbody > tr {
+  background-color: var(--surface-50);
+  color: var(--surface-500);
+}
+
+.dark-theme .p-datatable .p-datatable-tbody > tr:hover {
+  background-color: var(--surface-100);
+}
+
+.dark-theme .p-datatable .p-datatable-header {
+  background-color: var(--surface-100);
+  color: var(--surface-500);
+  border-color: var(--surface-200);
+}
+
+.dark-theme .p-datatable .p-datatable-footer {
+  background-color: var(--surface-100);
+  color: var(--surface-500);
+  border-color: var(--surface-200);
+}
+
+.dark-theme .p-datatable .p-paginator {
+  background-color: var(--surface-50);
+  color: var(--surface-500);
+}
+
+/* Input fields dark theme */
+.dark-theme .p-inputtext {
+  background-color: var(--surface-100);
+  color: var(--surface-500);
+  border-color: var(--surface-200);
+}
+
+.dark-theme .p-inputtext:enabled:hover {
+  border-color: var(--surface-300);
+}
+
+.dark-theme .p-inputtext:enabled:focus {
+  border-color: var(--surface-400);
+}
+
+/* Select dark theme */
+.dark-theme .p-select .p-select-label {
+  background-color: var(--surface-100);
+  color: var(--surface-500);
+}
+
+.dark-theme .p-select .p-select-trigger {
+  background-color: var(--surface-100);
+  color: var(--surface-500);
+}
+
+.dark-theme .p-select-panel {
+  background-color: var(--surface-50);
+  border-color: var(--surface-200);
+}
+
+.dark-theme .p-select-panel .p-select-item {
+  color: var(--surface-500);
+}
+
+.dark-theme .p-select-panel .p-select-item:hover {
+  background-color: var(--surface-100);
+  color: var(--surface-900);
+}
+
+.dark-theme .p-select-panel .p-select-item.p-highlight {
+  background-color: var(--surface-200);
+  color: var(--surface-900);
+}
+
+/* SelectButton dark theme */
+.dark-theme .p-selectbutton .p-selectbutton-button {
+  background-color: var(--surface-100);
+  color: var(--surface-500);
+  border-color: var(--surface-200);
+}
+
+.dark-theme .p-selectbutton .p-selectbutton-button:hover {
+  background-color: var(--surface-200);
+  color: var(--surface-900);
+}
+
+.dark-theme .p-selectbutton .p-selectbutton-button.p-highlight {
+  background-color: var(--surface-300);
+  color: var(--surface-900);
+}
+
+/* Card dark theme */
+.dark-theme .p-card {
+  background-color: var(--surface-50);
+  color: var(--surface-500);
+}
+
+.dark-theme .p-card .p-card-title {
+  color: var(--surface-500);
+}
+
+.dark-theme .p-card .p-card-content {
+  color: var(--surface-500);
+}
+
+/* Button dark theme adjustments */
+.dark-theme .p-button {
+  background-color: var(--surface-200);
+  border-color: var(--surface-200);
+  color: var(--surface-500);
+}
+
+.dark-theme .p-button:hover {
+  background-color: var(--surface-300);
+  border-color: var(--surface-300);
+  color: var(--surface-900);
+}
+
+/* Divider/HR dark theme */
+.dark-theme hr {
+  border-color: var(--surface-200);
+}
