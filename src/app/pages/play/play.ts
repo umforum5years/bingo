@@ -5,6 +5,7 @@ import { Button } from 'primeng/button';
 import { InputNumber } from 'primeng/inputnumber';
 import { Card } from 'primeng/card';
 import { Tooltip } from 'primeng/tooltip';
+import { SelectButton } from 'primeng/selectbutton';
 import { FireworksComponent } from '../../components/fireworks/fireworks.component';
 
 interface Artist {
@@ -13,6 +14,8 @@ interface Artist {
 }
 
 type DisplayMode = 'name' | 'number' | 'both';
+
+type MatchedSortType = 'matchedCount' | 'completedTotal';
 
 interface BingoCard {
   id: number;
@@ -41,6 +44,7 @@ interface MatchedCard {
     FormsModule,
     DecimalPipe,
     Tooltip,
+    SelectButton,
     FireworksComponent
   ],
   templateUrl: './play.html',
@@ -53,6 +57,12 @@ export class Play {
   protected readonly manualNumber = signal<number | null>(null);
   protected readonly showFireworks = signal<boolean>(false);
   protected readonly hadFullMatch = signal<Set<number>>(new Set());
+  protected readonly matchedSortType = signal<MatchedSortType>('matchedCount');
+
+  protected readonly sortOptions = [
+    { label: 'По количеству совпадений', value: 'matchedCount' },
+    { label: 'По заполненным линиям', value: 'completedTotal' },
+  ];
 
   protected readonly matchedCards = computed<MatchedCard[]>(() => {
     const cards = this.bingoCards();
@@ -118,7 +128,16 @@ export class Play {
         };
       })
       .filter((mc) => mc.matchedCount > 0)
-      .sort((a, b) => b.matchPercentage - a.matchPercentage);
+      .sort((a, b) => {
+        const sortType = this.matchedSortType();
+        if (sortType === 'matchedCount') {
+          return b.matchedCount - a.matchedCount;
+        } else {
+          const aTotal = a.completedRows + a.completedCols + a.completedDiagonals;
+          const bTotal = b.completedRows + b.completedCols + b.completedDiagonals;
+          return bTotal - aTotal;
+        }
+      });
   });
 
   protected readonly totalNumbers = computed(() => this.artists().length);

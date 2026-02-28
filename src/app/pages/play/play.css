@@ -111,6 +111,27 @@
   margin-top: 2rem;
 }
 
+.matched-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.sort-control {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sort-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
 .matched-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
