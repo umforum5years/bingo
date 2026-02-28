@@ -98,6 +98,7 @@
   flex-direction: column;
   align-items: center;
   box-sizing: border-box;
+  position: relative;
 }
 
 .print-page.portrait {
@@ -228,6 +229,10 @@
 
   .controls-section,
   .empty-state {
+    display: none !important;
+  }
+
+  .p-button[severity="success"] {
     display: none !important;
   }
 }

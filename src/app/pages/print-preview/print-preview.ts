@@ -2,6 +2,7 @@ import { Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Button } from 'primeng/button';
 import { Select } from 'primeng/select';
+import html2canvas from 'html2canvas';
 
 interface BingoCell {
   name: string;
@@ -105,6 +106,35 @@ export class PrintPreview {
 
   protected printCards(): void {
     window.print();
+  }
+
+  protected async saveCardsAsPng(): Promise<void> {
+    const cards = this.bingoCards();
+    if (cards.length === 0) return;
+
+    const contentContainer = document.querySelector('.print-preview-content');
+    if (!contentContainer) return;
+
+    const cardElements = contentContainer.querySelectorAll('.print-page');
+
+    for (let i = 0; i < cardElements.length; i++) {
+      const cardElement = cardElements[i];
+      const card = cards[i];
+
+      const canvas = await html2canvas(cardElement as HTMLElement, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+      });
+
+      const link = document.createElement('a');
+      link.download = `bingo-card-${card.id}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+
+      // Small delay between downloads to avoid browser blocking
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
   }
 
   protected getEffectiveGridSize(): number {

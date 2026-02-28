@@ -1,6 +1,6 @@
 {
   "configVersion": 1,
-  "timestamp": 1772284092503,
+  "timestamp": 1772316319936,
   "index": "/bingo/index.html",
   "assetGroups": [
     {
@@ -13,9 +13,9 @@
       "urls": [
         "/bingo/favicon.ico",
         "/bingo/index.html",
-        "/bingo/main-B4FBJMSA.js",
+        "/bingo/main-MBIA4XK3.js",
         "/bingo/manifest.webmanifest",
-        "/bingo/styles-PX4UXOCC.css"
+        "/bingo/styles-25OJZWIH.css"
       ],
       "patterns": []
     },
@@ -52,14 +52,14 @@
   "hashTable": {
     "/bingo/favicon.ico": "9c39f434fe1261f68c5e3eefdf734630d99c5670",
     "/bingo/icons/icon.svg": "1e8fd80b3bcea8bfe8fa90ccd8a492d718b871cf",
-    "/bingo/index.html": "5f4fec89ffb4a5d9249ded8d5a19c465a158bc24",
-    "/bingo/main-B4FBJMSA.js": "a26628a8cccb50a1c8b2670d56e204331df01cf6",
+    "/bingo/index.html": "6e71fd1c4cf5673b90c048af539257ebf25bfb8f",
+    "/bingo/main-MBIA4XK3.js": "bbcee24cec160fb662fd475dd8dfd10e709eb733",
     "/bingo/manifest.webmanifest": "51e5c96ebc778407eb49c5946bed6ec193d8505a",
     "/bingo/media/primeicons-4GST5W3O.woff2": "837c1279b6af9d297f34fdb43e6fcc9206a79f32",
     "/bingo/media/primeicons-DHQU4SEP.svg": "a07ae39027c1a780b42fd82fad7575c2924d9d28",
     "/bingo/media/primeicons-GEFHGEHP.ttf": "3b878ca7e88945a8ec25814810b95367d8977ae6",
     "/bingo/media/primeicons-P53SE5CV.woff": "361e3af71bb4e515feead2f787348a92a5527158",
-    "/bingo/styles-PX4UXOCC.css": "7960a90583bbd205ee0007f0675cfc13f69fde47"
+    "/bingo/styles-25OJZWIH.css": "b9da4df8f80ddeb0a6c2f538b32f6bf90a3691bf"
   },
   "navigationUrls": [
     {
