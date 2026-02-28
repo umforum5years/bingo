@@ -1,0 +1,107 @@
+<div class="print-preview-container">
+  <div class="controls-section">
+    <h1 class="page-title">Предпросмотр для печати</h1>
+    
+    <div class="controls-row">
+      <div class="controls-left">
+        <p-button
+          label="Загрузить бланки"
+          icon="pi pi-upload"
+          severity="info"
+          (onClick)="loadBingoCards()"
+        />
+        
+        @if (bingoCards().length > 0) {
+          <p-button
+            label="Загрузить фон"
+            icon="pi pi-image"
+            severity="secondary"
+            (onClick)="selectBackgroundImage()"
+          />
+          @if (backgroundImage()) {
+            <p-button
+              label="Очистить фон"
+              icon="pi pi-trash"
+              severity="danger"
+              (onClick)="clearBackgroundImage()"
+            />
+          }
+          <p-button
+            label="Печать"
+            icon="pi pi-print"
+            severity="primary"
+            (onClick)="printCards()"
+          />
+        }
+      </div>
+      
+      @if (bingoCards().length > 0) {
+        <div class="controls-right">
+          <label class="control-label">Отображение:</label>
+          <p-select
+            [options]="displayModes"
+            [(ngModel)]="displayMode"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Режим"
+          />
+        </div>
+      }
+    </div>
+  </div>
+
+  @if (bingoCards().length === 0) {
+    <div class="empty-state">
+      <p>Загрузите JSON-файл с бланками для предпросмотра и печати</p>
+    </div>
+  }
+
+  @if (bingoCards().length > 0) {
+    <div class="print-preview-content">
+      @for (card of bingoCards(); track card.id) {
+        <div 
+          class="print-page" 
+          [style.background-image]="backgroundImage() ? 'url(' + backgroundImage() + ')' : null"
+          [style.background-size]="'cover'"
+          [style.background-position]="'center'"
+          [style.background-repeat]="'no-repeat'"
+        >
+          <div class="print-card-number">Бланк №{{ card.id }}</div>
+          <div
+            class="print-bingo-grid"
+            [style.grid-template-columns]="'repeat(' + getEffectiveGridSize() + ', 1fr)'"
+          >
+            @for (cell of card.cells; track cell.number) {
+              <div class="print-bingo-cell">
+                @if (displayMode() === 'number') {
+                  <span class="print-cell-number">{{ cell.number }}</span>
+                } @else if (displayMode() === 'name') {
+                  <span class="print-cell-name">{{ cell.name }}</span>
+                } @else {
+                  <span class="print-cell-number">{{ cell.number }}</span>
+                  <span class="print-cell-name">{{ cell.name }}</span>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<input
+  id="loadCardsFileInput"
+  type="file"
+  accept=".json"
+  (change)="onCardsFileLoad($event)"
+  class="hidden"
+/>
+
+<input
+  id="backgroundImageInput"
+  type="file"
+  accept="image/*"
+  (change)="onBackgroundImageSelect($event)"
+  class="hidden"
+/>

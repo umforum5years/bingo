@@ -1,0 +1,210 @@
+.print-preview-container {
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  min-height: 100vh;
+}
+
+.page-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: #1f2937;
+}
+
+:host-context(.dark-theme) .page-title {
+  color: #e4e4e7;
+}
+
+.controls-section {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: #f9fafb;
+  border-radius: 0.5rem;
+}
+
+:host-context(.dark-theme) .controls-section {
+  background: #27272a;
+}
+
+.controls-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.controls-left {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.controls-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.control-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+:host-context(.dark-theme) .control-label {
+  color: #a1a1aa;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: #f3f4f6;
+  border-radius: 0.5rem;
+  color: #6b7280;
+  font-size: 1.125rem;
+}
+
+:host-context(.dark-theme) .empty-state {
+  background: #27272a;
+  color: #a1a1aa;
+}
+
+.print-preview-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: #e5e7eb;
+  border-radius: 0.5rem;
+}
+
+:host-context(.dark-theme) .print-preview-content {
+  background: #18181b;
+}
+
+/* Print Page - A4 dimensions */
+.print-page {
+  background: white;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  width: 210mm;
+  height: 297mm;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  page-break-after: always;
+  break-after: page;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6cm 1cm 3cm;
+  box-sizing: border-box;
+}
+
+.print-card-number {
+  font-size: 14pt;
+  font-weight: bold;
+  margin-bottom: 1cm;
+  color: #1f2937;
+  text-align: center;
+}
+
+:host-context(.dark-theme) .print-card-number {
+  color: #e4e4e7;
+}
+
+.print-bingo-grid {
+  display: grid;
+  gap: 2mm;
+  width: 100%;
+  height: calc(100% - 6cm - 14pt);
+}
+
+.print-bingo-cell {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1pt solid #333;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2mm;
+  box-sizing: border-box;
+}
+
+:host-context(.dark-theme) .print-bingo-cell {
+  background: rgba(39, 39, 42, 0.9);
+}
+
+.print-cell-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1mm;
+}
+
+.print-cell-number {
+  font-size: 14pt;
+  font-weight: bold;
+  line-height: 1;
+  color: #333;
+}
+
+.print-cell-name {
+  font-size: 8pt;
+  line-height: 1.2;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  color: #666;
+}
+
+/* Print styles */
+@media print {
+  @page {
+    margin: 0;
+    size: A4;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .print-preview-content,
+  .print-preview-content * {
+    visibility: visible;
+  }
+
+  .print-preview-content {
+    position: absolute;
+    left: 0;
+    top: 0;
+    background: white;
+    padding: 0;
+  }
+
+  .print-page {
+    box-shadow: none;
+    margin: 0;
+    page-break-after: always;
+    break-after: page;
+    padding: 6cm 1cm 3cm !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color-adjust: exact;
+  }
+
+  .print-page:last-child {
+    page-break-after: auto;
+    break-after: auto;
+  }
+
+  .controls-section,
+  .empty-state {
+    display: none !important;
+  }
+}

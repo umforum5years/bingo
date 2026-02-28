@@ -17,6 +17,7 @@ export class App {
   protected readonly menuItems = computed<MenuItem[]>(() => [
     { label: 'Конструктор', icon: 'pi pi-palette', routerLink: '/design' },
     { label: 'Игра', icon: 'pi pi-play', routerLink: '/play' },
+    { label: 'Печать бланков', icon: 'pi pi-print', routerLink: '/print-preview' },
     {
       icon: this.isDarkTheme() ? 'pi pi-sun' : 'pi pi-moon',
       command: () => this.toggleTheme(),
