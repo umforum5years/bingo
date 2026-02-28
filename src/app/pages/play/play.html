@@ -97,7 +97,14 @@
   @if (matchedCards().length > 0) {
     <div class="matched-section">
       <div class="matched-section-header">
-        <h2 class="section-title">Подходящие бланки: {{ matchedCards().length }}</h2>
+        <h2 class="section-title">
+          Подходящие бланки: {{ matchedCards().length }}
+          @if (newCompletionsCount() > 0) {
+            <span class="bell-indicator">
+              🔔 {{ newCompletionsCount() }}
+            </span>
+          }
+        </h2>
         <div class="sort-control">
           <label class="sort-label">Сортировка:</label>
           <p-selectbutton

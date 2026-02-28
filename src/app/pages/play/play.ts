@@ -168,6 +168,10 @@ export class Play {
     });
   });
 
+  protected readonly newCompletionsCount = computed(() => {
+    return this.matchedCards().filter(mc => mc.hasNewCompletion).length;
+  });
+
   protected readonly totalNumbers = computed(() => this.artists().length);
   protected readonly lastDrawnNumber = computed(() => {
     const drawn = this.drawnNumbers();
