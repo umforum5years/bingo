@@ -91,16 +91,25 @@
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  width: 210mm;
-  height: 297mm;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   page-break-after: always;
   break-after: page;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 6cm 1cm 3cm;
   box-sizing: border-box;
+}
+
+.print-page.portrait {
+  width: 210mm;
+  height: 297mm;
+  padding: 6cm 1cm 1cm;
+}
+
+.print-page.landscape {
+  width: 297mm;
+  height: 210mm;
+  padding: 4cm 1cm 0.5cm;
 }
 
 .print-card-number {
@@ -167,7 +176,14 @@
 @media print {
   @page {
     margin: 0;
-    size: A4;
+  }
+
+  @page portrait {
+    size: A4 portrait;
+  }
+
+  @page landscape {
+    size: A4 landscape;
   }
 
   body * {
@@ -192,10 +208,17 @@
     margin: 0;
     page-break-after: always;
     break-after: page;
-    padding: 6cm 1cm 3cm !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
     color-adjust: exact;
+  }
+
+  .print-page.portrait {
+    padding: 6cm 1cm 1cm !important;
+  }
+
+  .print-page.landscape {
+    padding: 4cm 1cm 0.5cm !important;
   }
 
   .print-page:last-child {

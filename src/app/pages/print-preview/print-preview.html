@@ -37,6 +37,14 @@
       
       @if (bingoCards().length > 0) {
         <div class="controls-right">
+          <label class="control-label">Ориентация:</label>
+          <p-select
+            [options]="orientations"
+            [(ngModel)]="orientation"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Ориентация"
+          />
           <label class="control-label">Отображение:</label>
           <p-select
             [options]="displayModes"
@@ -59,14 +67,16 @@
   @if (bingoCards().length > 0) {
     <div class="print-preview-content">
       @for (card of bingoCards(); track card.id) {
-        <div 
-          class="print-page" 
+        <div
+          class="print-page"
+          [class.portrait]="orientation() === 'portrait'"
+          [class.landscape]="orientation() === 'landscape'"
           [style.background-image]="backgroundImage() ? 'url(' + backgroundImage() + ')' : null"
           [style.background-size]="'cover'"
           [style.background-position]="'center'"
           [style.background-repeat]="'no-repeat'"
         >
-          <div class="print-card-number">Бланк №{{ card.id }}</div>
+          <div class="print-card-number">№{{ card.id }}</div>
           <div
             class="print-bingo-grid"
             [style.grid-template-columns]="'repeat(' + getEffectiveGridSize() + ', 1fr)'"

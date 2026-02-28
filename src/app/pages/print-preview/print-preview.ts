@@ -32,11 +32,17 @@ export class PrintPreview {
   protected readonly displayMode = signal<DisplayMode>('both');
   protected readonly backgroundImage = signal<string | null>(null);
   protected readonly gridSize = signal<number>(5);
+  protected readonly orientation = signal<'portrait' | 'landscape'>('portrait');
 
   protected readonly displayModes: { label: string; value: DisplayMode }[] = [
     { label: 'Название и номер', value: 'both' },
     { label: 'Только название', value: 'name' },
     { label: 'Только номер', value: 'number' },
+  ];
+
+  protected readonly orientations: { label: string; value: 'portrait' | 'landscape' }[] = [
+    { label: 'Портретная (A4)', value: 'portrait' },
+    { label: 'Альбомная (A4)', value: 'landscape' },
   ];
 
   protected loadBingoCards(): void {
