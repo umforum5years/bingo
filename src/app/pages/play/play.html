@@ -118,6 +118,9 @@
                   @if (matched.card.gridSize) {
                     <span class="matched-card-size">{{ matched.card.gridSize }}x{{ matched.card.gridSize }}</span>
                   }
+                  @if (matched.hasNewCompletion) {
+                    <span class="bell-icon">🔔</span>
+                  }
                 </div>
                 <span class="matched-card-progress">{{ matched.matchPercentage | number:'1.0-0' }}%</span>
               </div>

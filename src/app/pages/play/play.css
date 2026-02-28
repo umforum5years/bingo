@@ -162,6 +162,21 @@
   gap: 0.5rem;
 }
 
+.bell-icon {
+  font-size: 1.25rem;
+  animation: ring 0.5s ease-in-out;
+}
+
+@keyframes ring {
+  0% { transform: rotate(0deg); }
+  10% { transform: rotate(15deg); }
+  20% { transform: rotate(-15deg); }
+  30% { transform: rotate(15deg); }
+  40% { transform: rotate(-15deg); }
+  50% { transform: rotate(0deg); }
+  100% { transform: rotate(0deg); }
+}
+
 .matched-card-title {
   font-weight: 600;
   font-size: 1rem;

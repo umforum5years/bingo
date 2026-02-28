@@ -33,6 +33,11 @@ interface MatchedCard {
   completedRows: number;
   completedCols: number;
   completedDiagonals: number;
+  completedTotal: number;
+}
+
+interface MatchedCardWithCompletion extends MatchedCard {
+  hasNewCompletion: boolean;
 }
 
 @Component({
@@ -58,13 +63,14 @@ export class Play {
   protected readonly showFireworks = signal<boolean>(false);
   protected readonly hadFullMatch = signal<Set<number>>(new Set());
   protected readonly matchedSortType = signal<MatchedSortType>('matchedCount');
+  protected readonly previousCompletedTotals = signal<Map<number, number>>(new Map());
 
   protected readonly sortOptions = [
     { label: 'По количеству совпадений', value: 'matchedCount' },
     { label: 'По заполненным линиям', value: 'completedTotal' },
   ];
 
-  protected readonly matchedCards = computed<MatchedCard[]>(() => {
+  protected readonly matchedCardsBase = computed<MatchedCard[]>(() => {
     const cards = this.bingoCards();
     const drawn = this.drawnNumbers();
 
@@ -98,7 +104,7 @@ export class Play {
 
         // Подсчёт заполненных диагоналей
         let completedDiagonals = 0;
-        
+
         // Главная диагональ (слева-сверху вправо-вниз)
         const mainDiagonalNumbers: number[] = [];
         for (let i = 0; i < gridSize; i++) {
@@ -107,7 +113,7 @@ export class Play {
         if (mainDiagonalNumbers.every((n) => drawn.includes(n))) {
           completedDiagonals++;
         }
-        
+
         // Побочная диагональ (справа-сверху влево-вниз)
         const antiDiagonalNumbers: number[] = [];
         for (let i = 0; i < gridSize; i++) {
@@ -117,6 +123,8 @@ export class Play {
           completedDiagonals++;
         }
 
+        const completedTotal = completedRows + completedCols + completedDiagonals;
+
         return {
           card,
           matchedCount: matchedNumbers.length,
@@ -125,6 +133,7 @@ export class Play {
           completedRows,
           completedCols,
           completedDiagonals,
+          completedTotal,
         };
       })
       .filter((mc) => mc.matchedCount > 0)
@@ -140,6 +149,20 @@ export class Play {
       });
   });
 
+  protected readonly matchedCards = computed<MatchedCardWithCompletion[]>(() => {
+    const baseCards = this.matchedCardsBase();
+    const previousTotals = this.previousCompletedTotals();
+
+    return baseCards.map((mc) => {
+      const previousTotal = previousTotals.get(mc.card.id) || 0;
+      const hasNewCompletion = mc.completedTotal > previousTotal && mc.completedTotal > 0;
+      return {
+        ...mc,
+        hasNewCompletion,
+      };
+    });
+  });
+
   protected readonly totalNumbers = computed(() => this.artists().length);
   protected readonly lastDrawnNumber = computed(() => {
     const drawn = this.drawnNumbers();
@@ -150,7 +173,7 @@ export class Play {
     effect(() => {
       const matched = this.matchedCards();
       const fullMatchCards = matched.filter(mc => mc.matchPercentage === 100);
-      
+
       for (const card of fullMatchCards) {
         if (!this.hadFullMatch().has(card.card.id)) {
           console.log('Full match detected for card:', card.card.id);
@@ -213,6 +236,7 @@ export class Play {
             this.bingoCards.set(json);
             this.hadFullMatch.set(new Set());
             this.showFireworks.set(false);
+            this.previousCompletedTotals.set(new Map());
           }
         } catch {
           console.error('Invalid JSON file');
@@ -225,24 +249,31 @@ export class Play {
   protected drawRandomNumber(): void {
     const artists = this.artists();
     const drawn = this.drawnNumbers();
-    
+
     if (artists.length === 0) {
       alert('Сначала загрузите список исполнителей');
       return;
     }
-    
+
     if (drawn.length >= artists.length) {
       alert('Все номера уже выпали');
       return;
     }
-    
+
+    // Сохраняем текущие значения перед добавлением нового номера
+    const currentTotals = new Map<number, number>();
+    this.matchedCardsBase().forEach((mc) => {
+      currentTotals.set(mc.card.id, mc.completedTotal);
+    });
+    this.previousCompletedTotals.set(currentTotals);
+
     const availableNumbers = artists
       .map((a) => a.number)
       .filter((n) => !drawn.includes(n));
-    
+
     const randomIndex = Math.floor(Math.random() * availableNumbers.length);
     const drawnNumber = availableNumbers[randomIndex];
-    
+
     this.drawnNumbers.update((nums) => [...nums, drawnNumber]);
   }
 
@@ -264,6 +295,13 @@ export class Play {
       return;
     }
 
+    // Сохраняем текущие значения перед добавлением нового номера
+    const currentTotals = new Map<number, number>();
+    this.matchedCardsBase().forEach((mc) => {
+      currentTotals.set(mc.card.id, mc.completedTotal);
+    });
+    this.previousCompletedTotals.set(currentTotals);
+
     this.drawnNumbers.update((nums) => [...nums, number]);
     this.manualNumber.set(null);
   }
@@ -271,6 +309,13 @@ export class Play {
   protected removeDrawnNumber(number: number): void {
     const confirmed = confirm(`Удалить номер ${number} из выпавших? Он снова станет доступным для розыгрыша.`);
     if (confirmed) {
+      // Сохраняем текущие значения перед удалением номера
+      const currentTotals = new Map<number, number>();
+      this.matchedCardsBase().forEach((mc) => {
+        currentTotals.set(mc.card.id, mc.completedTotal);
+      });
+      this.previousCompletedTotals.set(currentTotals);
+      
       this.drawnNumbers.update((nums) => nums.filter((n) => n !== number));
     }
   }
@@ -279,6 +324,7 @@ export class Play {
     this.drawnNumbers.set([]);
     this.hadFullMatch.set(new Set());
     this.showFireworks.set(false);
+    this.previousCompletedTotals.set(new Map());
   }
 
   protected getArtistByNumber(number: number): string {
