@@ -29,6 +29,7 @@ interface MatchedCard {
   matchPercentage: number;
   completedRows: number;
   completedCols: number;
+  completedDiagonals: number;
 }
 
 @Component({
@@ -85,6 +86,27 @@ export class Play {
           if (allMatched) completedCols++;
         }
 
+        // Подсчёт заполненных диагоналей
+        let completedDiagonals = 0;
+        
+        // Главная диагональ (слева-сверху вправо-вниз)
+        const mainDiagonalNumbers: number[] = [];
+        for (let i = 0; i < gridSize; i++) {
+          mainDiagonalNumbers.push(card.numbers[i * gridSize + i]);
+        }
+        if (mainDiagonalNumbers.every((n) => drawn.includes(n))) {
+          completedDiagonals++;
+        }
+        
+        // Побочная диагональ (справа-сверху влево-вниз)
+        const antiDiagonalNumbers: number[] = [];
+        for (let i = 0; i < gridSize; i++) {
+          antiDiagonalNumbers.push(card.numbers[i * gridSize + (gridSize - 1 - i)]);
+        }
+        if (antiDiagonalNumbers.every((n) => drawn.includes(n))) {
+          completedDiagonals++;
+        }
+
         return {
           card,
           matchedCount: matchedNumbers.length,
@@ -92,6 +114,7 @@ export class Play {
           matchPercentage,
           completedRows,
           completedCols,
+          completedDiagonals,
         };
       })
       .filter((mc) => mc.matchedCount > 0)
