@@ -199,6 +199,26 @@ export class Design {
     }
   }
 
+  protected loadArtistsTxt(): void {
+    const fileInput = document.getElementById('loadTxtFileInput') as HTMLInputElement;
+    fileInput?.click();
+  }
+
+  protected onTxtFileLoad(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const text = e.target?.result as string;
+        const lines = text.split('\n').map((line) => line.trim()).filter((line) => line.length > 0);
+        const artists: Artist[] = lines.map((name) => ({ name, number: null }));
+        this.artists.set(artists);
+      };
+      reader.readAsText(file);
+    }
+  }
+
   protected getEffectiveGridSize(): number {
     if (this.useCustomGrid() && this.customGridSize() && this.customGridSize()! >= 2) {
       return this.customGridSize()!;

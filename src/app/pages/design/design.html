@@ -8,15 +8,20 @@
       [disabled]="artists().length === 0"
     />
     <p-button
-      label="Сохранить список исполнителей"
+      label="Сохранить список (json)"
       icon="pi pi-download"
       (onClick)="saveArtists()"
       [disabled]="artists().length === 0"
     />
     <p-button
-      label="Загрузить список исполнителей"
+      label="Загрузить список (json)"
       icon="pi pi-upload"
       (onClick)="loadArtists()"
+    />
+    <p-button
+      label="Загрузить список (txt)"
+      icon="pi pi-file"
+      (onClick)="loadArtistsTxt()"
     />
     <p-button
       label="Скачать список (txt)"
@@ -40,6 +45,14 @@
     type="file"
     accept=".json"
     (change)="onFileLoad($event)"
+    class="hidden"
+  />
+
+  <input
+    id="loadTxtFileInput"
+    type="file"
+    accept=".txt"
+    (change)="onTxtFileLoad($event)"
     class="hidden"
   />
 
