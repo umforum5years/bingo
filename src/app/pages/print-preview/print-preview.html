@@ -59,6 +59,24 @@
             optionValue="value"
             placeholder="Режим"
           />
+          <label class="control-label">Шрифт номера:</label>
+          <input
+            type="number"
+            [(ngModel)]="cellNumberFontSize"
+            style="width: 60px;"
+            min="4"
+            max="72"
+            class="p-inputtext"
+          />
+          <label class="control-label">Шрифт названия:</label>
+          <input
+            type="number"
+            [(ngModel)]="cellNameFontSize"
+            style="width: 60px;"
+            min="4"
+            max="72"
+            class="p-inputtext"
+          />
         </div>
       }
     </div>
@@ -90,12 +108,12 @@
             @for (cell of card.cells; track cell.number) {
               <div class="print-bingo-cell">
                 @if (displayMode() === 'number') {
-                  <span class="print-cell-number">{{ cell.number }}</span>
+                  <span class="print-cell-number" [style.font-size.pt]="cellNumberFontSize()">{{ cell.number }}</span>
                 } @else if (displayMode() === 'name') {
-                  <span class="print-cell-name">{{ cell.name }}</span>
+                  <span class="print-cell-name" [style.font-size.pt]="cellNameFontSize()">{{ cell.name }}</span>
                 } @else {
-                  <span class="print-cell-number">{{ cell.number }}</span>
-                  <span class="print-cell-name">{{ cell.name }}</span>
+                  <span class="print-cell-number" [style.font-size.pt]="cellNumberFontSize()">{{ cell.number }}</span>
+                  <span class="print-cell-name" [style.font-size.pt]="cellNameFontSize()">{{ cell.name }}</span>
                 }
               </div>
             }

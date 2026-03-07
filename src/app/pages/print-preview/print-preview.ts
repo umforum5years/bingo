@@ -1,8 +1,8 @@
 import { Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import html2canvas from 'html2canvas';
 import { Button } from 'primeng/button';
 import { Select } from 'primeng/select';
-import html2canvas from 'html2canvas';
 
 interface BingoCell {
   name: string;
@@ -34,6 +34,8 @@ export class PrintPreview {
   protected readonly backgroundImage = signal<string | null>(null);
   protected readonly gridSize = signal<number>(5);
   protected readonly orientation = signal<'portrait' | 'landscape'>('portrait');
+  protected readonly cellNumberFontSize = signal<number>(16);
+  protected readonly cellNameFontSize = signal<number>(12);
 
   protected readonly displayModes: { label: string; value: DisplayMode }[] = [
     { label: 'Название и номер', value: 'both' },
