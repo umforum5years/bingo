@@ -18,6 +18,7 @@ export class App {
     { label: 'Конструктор', icon: 'pi pi-palette', routerLink: '/design' },
     { label: 'Игра', icon: 'pi pi-play', routerLink: '/play' },
     { label: 'Печать бланков', icon: 'pi pi-print', routerLink: '/print-preview' },
+    { label: 'Справка', icon: 'pi pi-question-circle', routerLink: '/help' },
     {
       icon: this.isDarkTheme() ? 'pi pi-sun' : 'pi pi-moon',
       command: () => this.toggleTheme(),
