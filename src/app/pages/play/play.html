@@ -34,10 +34,32 @@
       (change)="onCardsFileLoad($event)"
       style="display: none"
     />
+    <input
+      type="file"
+      id="loadGameFileInput"
+      accept=".json"
+      (change)="onGameFileLoad($event)"
+      style="display: none"
+    />
   </div>
 
   @if (artists().length > 0) {
     <div class="game-section">
+      <div class="save-load-buttons">
+        <p-button
+          label="Сохранить игру"
+          icon="pi pi-save"
+          severity="success"
+          (onClick)="saveGame()"
+        />
+        <p-button
+          label="Загрузить игру"
+          icon="pi pi-upload"
+          severity="info"
+          (onClick)="loadGame()"
+        />
+      </div>
+
       <div class="draw-controls">
         <div class="draw-buttons">
           <p-button
@@ -204,7 +226,8 @@
       </div>
 
       <p-dialog
-        [(visible)]="showAchievementsPanel"
+        [visible]="showAchievementsPanel()"
+        (visibleChange)="showAchievementsPanel.set($event)"
         header="🏆 Достижения бланков"
         [modal]="true"
         [style]="{ width: '500px' }"

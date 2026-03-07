@@ -427,6 +427,69 @@ export class Play {
     }
   }
 
+  protected saveGame(): void {
+    const state = {
+      artists: this.artists(),
+      bingoCards: this.bingoCards(),
+      drawnNumbers: this.drawnNumbers(),
+      hadFullMatch: Array.from(this.hadFullMatch()),
+      previousCompletedTotals: Array.from(this.previousCompletedTotals().entries()),
+      shownMilestones: Array.from(this.shownMilestones().entries()),
+      shownFullMatch: Array.from(this.shownFullMatch()),
+      countDiagonals: this.countDiagonals(),
+      milestoneAchievements: this.milestoneAchievements(),
+    };
+    const json = JSON.stringify(state, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `bingo-game-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  protected loadGame(): void {
+    const fileInput = document.getElementById('loadGameFileInput') as HTMLInputElement;
+    fileInput?.click();
+  }
+
+  protected onGameFileLoad(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const state = JSON.parse(e.target?.result as string);
+          if (state.artists) this.artists.set(state.artists);
+          if (state.bingoCards) this.bingoCards.set(state.bingoCards);
+          if (state.drawnNumbers) this.drawnNumbers.set(state.drawnNumbers);
+          if (state.hadFullMatch) this.hadFullMatch.set(new Set(state.hadFullMatch));
+          if (state.previousCompletedTotals) {
+            this.previousCompletedTotals.set(new Map(state.previousCompletedTotals));
+          }
+          if (state.shownMilestones) {
+            this.shownMilestones.set(new Map(state.shownMilestones));
+          }
+          if (state.shownFullMatch) {
+            this.shownFullMatch.set(new Set(state.shownFullMatch));
+          }
+          if (state.countDiagonals !== undefined) {
+            this.countDiagonals.set(state.countDiagonals);
+          }
+          if (state.milestoneAchievements) {
+            this.milestoneAchievements.set(state.milestoneAchievements);
+          }
+          localStorage.removeItem(this.STORAGE_KEY);
+        } catch {
+          console.error('Invalid game state file');
+        }
+      };
+      reader.readAsText(file);
+    }
+  }
+
   protected drawRandomNumber(): void {
     const artists = this.artists();
     const drawn = this.drawnNumbers();

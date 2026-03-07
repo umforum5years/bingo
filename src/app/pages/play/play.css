@@ -29,6 +29,13 @@
   margin-bottom: 2rem;
 }
 
+.save-load-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
 .draw-controls {
   background: #f9fafb;
   padding: 1.5rem;
