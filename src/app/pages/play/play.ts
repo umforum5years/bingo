@@ -1,4 +1,4 @@
-import { Component, signal, computed, effect } from '@angular/core';
+import { Component, signal, computed, effect, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
 import { Button } from 'primeng/button';
@@ -6,6 +6,9 @@ import { InputNumber } from 'primeng/inputnumber';
 import { Card } from 'primeng/card';
 import { Tooltip } from 'primeng/tooltip';
 import { SelectButton } from 'primeng/selectbutton';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
+import { Dialog } from 'primeng/dialog';
 import { FireworksComponent } from '../../components/fireworks/fireworks.component';
 
 interface Artist {
@@ -50,10 +53,13 @@ interface MatchedCardWithCompletion extends MatchedCard {
     DecimalPipe,
     Tooltip,
     SelectButton,
+    ToastModule,
+    Dialog,
     FireworksComponent
   ],
   templateUrl: './play.html',
   styleUrl: './play.css',
+  providers: [MessageService],
 })
 export class Play {
   protected readonly artists = signal<Artist[]>([]);
@@ -64,6 +70,11 @@ export class Play {
   protected readonly hadFullMatch = signal<Set<number>>(new Set());
   protected readonly matchedSortType = signal<MatchedSortType>('matchedCount');
   protected readonly previousCompletedTotals = signal<Map<number, number>>(new Map());
+  protected readonly shownMilestones = signal<Map<number, number[]>>(new Map());
+  protected readonly shownFullMatch = signal<Set<number>>(new Set());
+  protected readonly countDiagonals = signal<boolean>(true);
+  protected readonly showAchievementsPanel = signal<boolean>(false);
+  protected readonly milestoneAchievements = signal<Array<{ cardId: number; milestone: number | 'BINGO'; timestamp: number }>>([]);
 
   private readonly STORAGE_KEY = 'bingo-game-state';
 
@@ -180,6 +191,17 @@ export class Play {
     return drawn.length > 0 ? drawn[drawn.length - 1] : null;
   });
 
+  protected readonly getCompletedTotalForMilestones = computed(() => {
+    const countDiags = this.countDiagonals();
+    return (mc: MatchedCard) => {
+      return countDiags 
+        ? mc.completedRows + mc.completedCols + mc.completedDiagonals
+        : mc.completedRows + mc.completedCols;
+    };
+  });
+
+  private readonly messageService = inject(MessageService);
+
   constructor() {
     effect(() => {
       const matched = this.matchedCards();
@@ -194,9 +216,14 @@ export class Play {
             return newSet;
           });
           this.triggerFireworks();
+          this.showFullMatchToast(card.card.id);
         }
       }
     }, { allowSignalWrites: true });
+
+    effect(() => {
+      this.checkAndShowMilestones();
+    });
 
     effect(() => {
       this.saveGameState();
@@ -209,6 +236,96 @@ export class Play {
     this.showFireworks.set(true);
   }
 
+  private checkAndShowMilestones(): void {
+    const matched = this.matchedCards();
+    const milestones = [1, 2, 3, 4, 5];
+    const shownMilestones = this.shownMilestones();
+    const getCompletedTotal = this.getCompletedTotalForMilestones();
+
+    for (const milestone of milestones) {
+      // Находим все бланки, которые достигли этого milestone
+      const cardsWithMilestone = matched.filter(mc => getCompletedTotal(mc) >= milestone);
+
+      // Если milestone ещё не был показан
+      if (!shownMilestones.has(milestone) && cardsWithMilestone.length > 0) {
+        // Находим минимальное значение completedTotal среди всех бланков
+        const minCompleted = Math.min(...cardsWithMilestone.map(mc => getCompletedTotal(mc)));
+
+        // Берём только те бланки, которые достигли milestone первыми (с минимальным completedTotal)
+        const firstCards = cardsWithMilestone.filter(mc => getCompletedTotal(mc) === minCompleted);
+
+        // Показываем сообщение для каждого первого бланка
+        for (const fc of firstCards) {
+          this.showToastMilestone(fc.card.id, milestone);
+        }
+
+        // Помечаем milestone как показанный
+        this.shownMilestones.update(map => {
+          const newMap = new Map(map);
+          newMap.set(milestone, firstCards.map(c => c.card.id));
+          return newMap;
+        });
+      }
+    }
+  }
+
+  private showToastMilestone(cardId: number, milestone: number): void {
+    let message = '';
+    switch (milestone) {
+      case 1:
+        message = `Бланк №${cardId} собрал первую линию! 🎉`;
+        break;
+      case 2:
+        message = `Бланк №${cardId} собрал две линии! 🎉🎉`;
+        break;
+      case 3:
+        message = `Бланк №${cardId} собрал три линии! 🎉🎉🎉`;
+        break;
+      case 4:
+        message = `Бланк №${cardId} собрал четыре линии! 🎉🎉🎉🎉`;
+        break;
+      case 5:
+        message = `Бланк №${cardId} собрал пять линий! 🔥🔥🔥`;
+        break;
+    }
+
+    if (message) {
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Достижение!',
+        detail: message,
+        life: 5000,
+      });
+
+      this.milestoneAchievements.update(achievements => [
+        ...achievements,
+        { cardId, milestone, timestamp: Date.now() }
+      ]);
+    }
+  }
+
+  private showFullMatchToast(cardId: number): void {
+    if (!this.shownFullMatch().has(cardId)) {
+      this.shownFullMatch.update(set => {
+        const newSet = new Set(set);
+        newSet.add(cardId);
+        return newSet;
+      });
+
+      this.messageService.add({
+        severity: 'success',
+        summary: 'БИНГО!',
+        detail: `Бланк №${cardId} собрал все числа! 🎊🎊🎊`,
+        life: 5000,
+      });
+
+      this.milestoneAchievements.update(achievements => [
+        ...achievements,
+        { cardId, milestone: 'BINGO', timestamp: Date.now() }
+      ]);
+    }
+  }
+
   private saveGameState(): void {
     const state = {
       artists: this.artists(),
@@ -216,6 +333,10 @@ export class Play {
       drawnNumbers: this.drawnNumbers(),
       hadFullMatch: Array.from(this.hadFullMatch()),
       previousCompletedTotals: Array.from(this.previousCompletedTotals().entries()),
+      shownMilestones: Array.from(this.shownMilestones().entries()),
+      shownFullMatch: Array.from(this.shownFullMatch()),
+      countDiagonals: this.countDiagonals(),
+      milestoneAchievements: this.milestoneAchievements(),
     };
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(state));
   }
@@ -231,6 +352,18 @@ export class Play {
         if (state.hadFullMatch) this.hadFullMatch.set(new Set(state.hadFullMatch));
         if (state.previousCompletedTotals) {
           this.previousCompletedTotals.set(new Map(state.previousCompletedTotals));
+        }
+        if (state.shownMilestones) {
+          this.shownMilestones.set(new Map(state.shownMilestones));
+        }
+        if (state.shownFullMatch) {
+          this.shownFullMatch.set(new Set(state.shownFullMatch));
+        }
+        if (state.countDiagonals !== undefined) {
+          this.countDiagonals.set(state.countDiagonals);
+        }
+        if (state.milestoneAchievements) {
+          this.milestoneAchievements.set(state.milestoneAchievements);
         }
       } catch (e) {
         console.error('Failed to restore game state:', e);
@@ -373,11 +506,41 @@ export class Play {
     this.hadFullMatch.set(new Set());
     this.showFireworks.set(false);
     this.previousCompletedTotals.set(new Map());
+    this.shownMilestones.set(new Map());
+    this.shownFullMatch.set(new Set());
+    this.countDiagonals.set(true);
+    this.milestoneAchievements.set([]);
     localStorage.removeItem(this.STORAGE_KEY);
   }
 
   protected getArtistByNumber(number: number): string {
     const artist = this.artists().find((a) => a.number === number);
     return artist ? artist.name : '';
+  }
+
+  protected getMilestoneLabel(milestone: number | 'BINGO'): string {
+    if (milestone === 'BINGO') return 'чисел';
+    if (milestone === 1) return 'линию';
+    if (milestone === 2) return 'линии';
+    if (milestone === 3) return 'линии';
+    if (milestone === 4) return 'линии';
+    if (milestone === 5) return 'линий';
+    return 'линий';
+  }
+
+  protected getAchievementTime(timestamp: number): string {
+    const now = Date.now();
+    const diff = now - timestamp;
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+
+    if (hours > 0) {
+      return `${hours} ч. назад`;
+    } else if (minutes > 0) {
+      return `${minutes} мин. назад`;
+    } else {
+      return `${seconds} сек. назад`;
+    }
   }
 }

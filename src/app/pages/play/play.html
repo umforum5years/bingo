@@ -1,6 +1,7 @@
 <div class="play-container">
   <h1 class="page-title">Игра</h1>
 
+  <p-toast />
   <app-fireworks [show]="showFireworks()" (finished)="showFireworks.set(false)" />
 
   <div class="controls-section">
@@ -72,6 +73,18 @@
         </div>
       </div>
 
+      <div class="milestone-options">
+        <div class="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="countDiagonals"
+            [(ngModel)]="countDiagonals"
+            class="w-4 h-4"
+          />
+          <label for="countDiagonals" class="text-sm font-medium">Учитывать диагонали при подсчёте линий</label>
+        </div>
+      </div>
+
       @if (drawnNumbers().length > 0) {
         <div class="drawn-section">
           <h2 class="section-title">
@@ -104,6 +117,14 @@
               🔔 {{ newCompletionsCount() }}
             </span>
           }
+          <span
+            class="trophy-icon"
+            [class.has-achievements]="milestoneAchievements().length > 0"
+            (click)="showAchievementsPanel.set(true)"
+            title="Достижения бланков"
+          >
+            🏆 {{ milestoneAchievements().length }}
+          </span>
         </h2>
         <div class="sort-control">
           <label class="sort-label">Сортировка:</label>
@@ -181,6 +202,47 @@
           </p-card>
         }
       </div>
+
+      <p-dialog
+        [(visible)]="showAchievementsPanel"
+        header="🏆 Достижения бланков"
+        [modal]="true"
+        [style]="{ width: '500px' }"
+        [closable]="true"
+      >
+        <div class="achievements-dialog-content">
+          @for (achievement of milestoneAchievements(); track achievement.timestamp) {
+            <div class="achievement-item">
+              <span class="achievement-icon">
+                @if (achievement.milestone === 'BINGO') {
+                  🎊
+                } @else if (achievement.milestone === 5) {
+                  🔥
+                } @else if (achievement.milestone === 4) {
+                  🎉🎉🎉🎉
+                } @else if (achievement.milestone === 3) {
+                  🎉🎉🎉
+                } @else if (achievement.milestone === 2) {
+                  🎉🎉
+                } @else {
+                  🎉
+                }
+              </span>
+              <span class="achievement-text">
+                @if (achievement.milestone === 'BINGO') {
+                  Бланк №{{ achievement.cardId }} собрал все числа!
+                } @else {
+                  Бланк №{{ achievement.cardId }} собрал {{ achievement.milestone }} {{ getMilestoneLabel(achievement.milestone) }}
+                }
+              </span>
+              <span class="achievement-time">{{ getAchievementTime(achievement.timestamp) }}</span>
+            </div>
+          }
+          @empty {
+            <div class="no-achievements">Пока нет достижений</div>
+          }
+        </div>
+      </p-dialog>
     </div>
   }
 </div>

@@ -1,6 +1,6 @@
 {
   "configVersion": 1,
-  "timestamp": 1772918247318,
+  "timestamp": 1772921489258,
   "index": "/bingo/index.html",
   "assetGroups": [
     {
@@ -13,7 +13,7 @@
       "urls": [
         "/bingo/favicon.ico",
         "/bingo/index.html",
-        "/bingo/main-GX75SKOT.js",
+        "/bingo/main-WZDM3D2N.js",
         "/bingo/manifest.webmanifest",
         "/bingo/styles-IHMXJW3E.css"
       ],
@@ -52,8 +52,8 @@
   "hashTable": {
     "/bingo/favicon.ico": "9c39f434fe1261f68c5e3eefdf734630d99c5670",
     "/bingo/icons/icon.svg": "1e8fd80b3bcea8bfe8fa90ccd8a492d718b871cf",
-    "/bingo/index.html": "55f548ffef12c2ca9fcfe7db7911d1fd818ed669",
-    "/bingo/main-GX75SKOT.js": "f2f078408c5aa756923eb8d5cea3e6a1cd88cdd5",
+    "/bingo/index.html": "77c285f9ae2074fc62cc88fce9a7a1ee044288b1",
+    "/bingo/main-WZDM3D2N.js": "79b4a63a4715f375778bed7ec1dd1bdca55bad63",
     "/bingo/manifest.webmanifest": "51e5c96ebc778407eb49c5946bed6ec193d8505a",
     "/bingo/media/primeicons-4GST5W3O.woff2": "837c1279b6af9d297f34fdb43e6fcc9206a79f32",
     "/bingo/media/primeicons-DHQU4SEP.svg": "a07ae39027c1a780b42fd82fad7575c2924d9d28",
