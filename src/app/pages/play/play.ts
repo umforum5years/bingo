@@ -65,6 +65,8 @@ export class Play {
   protected readonly matchedSortType = signal<MatchedSortType>('matchedCount');
   protected readonly previousCompletedTotals = signal<Map<number, number>>(new Map());
 
+  private readonly STORAGE_KEY = 'bingo-game-state';
+
   protected readonly sortOptions = [
     { label: 'По количеству совпадений', value: 'matchedCount' },
     { label: 'По заполненным линиям', value: 'completedTotal' },
@@ -195,10 +197,45 @@ export class Play {
         }
       }
     }, { allowSignalWrites: true });
+
+    effect(() => {
+      this.saveGameState();
+    });
+
+    this.restoreGameState();
   }
 
   private triggerFireworks(): void {
     this.showFireworks.set(true);
+  }
+
+  private saveGameState(): void {
+    const state = {
+      artists: this.artists(),
+      bingoCards: this.bingoCards(),
+      drawnNumbers: this.drawnNumbers(),
+      hadFullMatch: Array.from(this.hadFullMatch()),
+      previousCompletedTotals: Array.from(this.previousCompletedTotals().entries()),
+    };
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(state));
+  }
+
+  private restoreGameState(): void {
+    const savedState = localStorage.getItem(this.STORAGE_KEY);
+    if (savedState) {
+      try {
+        const state = JSON.parse(savedState);
+        if (state.artists) this.artists.set(state.artists);
+        if (state.bingoCards) this.bingoCards.set(state.bingoCards);
+        if (state.drawnNumbers) this.drawnNumbers.set(state.drawnNumbers);
+        if (state.hadFullMatch) this.hadFullMatch.set(new Set(state.hadFullMatch));
+        if (state.previousCompletedTotals) {
+          this.previousCompletedTotals.set(new Map(state.previousCompletedTotals));
+        }
+      } catch (e) {
+        console.error('Failed to restore game state:', e);
+      }
+    }
   }
 
   protected loadArtists(): void {
@@ -219,6 +256,7 @@ export class Play {
             this.drawnNumbers.set([]);
             this.hadFullMatch.set(new Set());
             this.showFireworks.set(false);
+            localStorage.removeItem(this.STORAGE_KEY);
           }
         } catch {
           console.error('Invalid JSON file');
@@ -246,6 +284,7 @@ export class Play {
             this.hadFullMatch.set(new Set());
             this.showFireworks.set(false);
             this.previousCompletedTotals.set(new Map());
+            localStorage.removeItem(this.STORAGE_KEY);
           }
         } catch {
           console.error('Invalid JSON file');
@@ -334,6 +373,7 @@ export class Play {
     this.hadFullMatch.set(new Set());
     this.showFireworks.set(false);
     this.previousCompletedTotals.set(new Map());
+    localStorage.removeItem(this.STORAGE_KEY);
   }
 
   protected getArtistByNumber(number: number): string {
