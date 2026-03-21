@@ -113,20 +113,29 @@
               </span>
             }
           </span>
-          <p-button
-            icon="pi pi-angle-right"
-            severity="secondary"
-            (onClick)="navigateToNext()"
-            [disabled]="isLastCard()"
-            ariaLabel="Следующая"
-          />
-          <p-button
-            icon="pi pi-angle-double-right"
-            severity="secondary"
-            (onClick)="navigateToLast()"
-            [disabled]="isLastCard()"
-            ariaLabel="Последняя"
-          />
+          @if (isPrinting()) {
+            <p-button
+              icon="pi pi-times"
+              severity="danger"
+              (onClick)="cancelOperation()"
+              ariaLabel="Отменить"
+            />
+          } @else {
+            <p-button
+              icon="pi pi-angle-right"
+              severity="secondary"
+              (onClick)="navigateToNext()"
+              [disabled]="isLastCard()"
+              ariaLabel="Следующая"
+            />
+            <p-button
+              icon="pi pi-angle-double-right"
+              severity="secondary"
+              (onClick)="navigateToLast()"
+              [disabled]="isLastCard()"
+              ariaLabel="Последняя"
+            />
+          }
         </div>
       </div>
     }

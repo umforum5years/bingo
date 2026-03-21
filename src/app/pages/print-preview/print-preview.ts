@@ -52,6 +52,7 @@ export class PrintPreview {
   protected readonly currentIndex = signal<number>(0);
   protected readonly isPrinting = signal<boolean>(false);
   protected readonly printedCount = signal<number>(0);
+  protected readonly isCancelling = signal<boolean>(false);
 
   protected readonly displayModes: { label: string; value: DisplayMode }[] = [
     { label: 'Название и номер', value: 'both' },
@@ -161,9 +162,15 @@ export class PrintPreview {
     this.currentIndex.set(cards.length - 1);
   }
 
+  protected cancelOperation(): void {
+    this.isCancelling.set(true);
+  }
+
   protected async saveAsPdf(): Promise<void> {
     const cards = this.bingoCards();
     if (cards.length === 0) return;
+
+    this.isCancelling.set(false);
 
     const totalCards = cards.length;
     const orientation = this.orientation();
@@ -188,10 +195,18 @@ export class PrintPreview {
     this.printedCount.set(0);
 
     const saveCard = async (index: number) => {
+      if (this.isCancelling()) {
+        this.isPrinting.set(false);
+        this.printedCount.set(0);
+        this.isCancelling.set(false);
+        return;
+      }
+
       if (index >= totalCards) {
         pdf.save(`bingo-cards-${new Date().toISOString().slice(0, 10)}.pdf`);
         this.isPrinting.set(false);
         this.printedCount.set(0);
+        this.isCancelling.set(false);
         return;
       }
 
@@ -204,13 +219,16 @@ export class PrintPreview {
       if (!cardElement) return;
 
       const canvas = await html2canvas(cardElement, {
-        scale: 2,
+        scale: 4,
         useCORS: true,
+        allowTaint: true,
         backgroundColor: '#ffffff',
         logging: false,
+        imageTimeout: 0,
+        removeContainer: true,
       });
 
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const imgData = canvas.toDataURL('image/jpeg', 1.0);
 
       // Вычисляем размеры для сохранения пропорций
       const imgWidth = canvas.width;
@@ -239,14 +257,31 @@ export class PrintPreview {
     const cards = this.bingoCards();
     if (cards.length === 0) return;
 
+    this.isCancelling.set(false);
+
     const totalCards = cards.length;
     let savedCount = 0;
 
+    this.isPrinting.set(true);
+    this.printedCount.set(0);
+
     const saveCard = async (index: number) => {
-      if (index >= totalCards) return;
+      if (this.isCancelling()) {
+        this.isPrinting.set(false);
+        this.printedCount.set(0);
+        this.isCancelling.set(false);
+        return;
+      }
+
+      if (index >= totalCards) {
+        this.isPrinting.set(false);
+        this.printedCount.set(0);
+        this.isCancelling.set(false);
+        return;
+      }
 
       this.currentIndex.set(index);
-      
+
       // Даём DOM обновиться
       await new Promise(resolve => setTimeout(resolve, 50));
 
@@ -256,10 +291,13 @@ export class PrintPreview {
       const card = cards[index];
 
       const canvas = await html2canvas(cardElement, {
-        scale: 2,
+        scale: 4,
         useCORS: true,
+        allowTaint: true,
         backgroundColor: '#ffffff',
         logging: false,
+        imageTimeout: 0,
+        removeContainer: true,
       });
 
       const link = document.createElement('a');
@@ -268,12 +306,9 @@ export class PrintPreview {
       link.click();
 
       savedCount++;
+      this.printedCount.set(index + 1);
 
-      const remaining = totalCards - index - 1;
-      
-      if (remaining > 0) {
-        await saveCard(index + 1);  
-      }
+      await saveCard(index + 1);
     };
 
     await saveCard(0);
