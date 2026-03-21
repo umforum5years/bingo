@@ -16,6 +16,7 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { Button } from 'primeng/button';
 import { Select } from 'primeng/select';
+import { Tooltip } from 'primeng/tooltip';
 
 interface BingoCell {
   name: string;
@@ -36,7 +37,8 @@ type DisplayMode = 'name' | 'number' | 'both';
   imports: [
     Button,
     Select,
-    FormsModule
+    FormsModule,
+    Tooltip
   ],
   templateUrl: './print-preview.html',
   styleUrl: './print-preview.css',
@@ -391,6 +393,126 @@ export class PrintPreview {
     };
 
     await saveCard(0);
+  }
+
+  protected async saveCurrentCardAsPdf(): Promise<void> {
+    const currentCard = this.currentCard();
+    if (!currentCard) return;
+
+    const orientation = this.orientation();
+    const isPortrait = orientation === 'portrait';
+
+    const pdf = new jsPDF({
+      orientation: isPortrait ? 'portrait' : 'landscape',
+      unit: 'mm',
+      format: 'a4',
+    });
+
+    const pageWidth = isPortrait ? 210 : 297;
+    const pageHeight = isPortrait ? 297 : 210;
+    const margin = { top: 0, right: 0, bottom: 0, left: 0 };
+    const contentWidth = pageWidth - margin.left - margin.right;
+    const contentHeight = pageHeight - margin.top - margin.bottom;
+
+    const cardElement = document.querySelector('.print-page') as HTMLElement;
+    if (!cardElement) return;
+
+    const qualityScale = 6;
+
+    const canvas = await html2canvas(cardElement, {
+      scale: qualityScale,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+      imageTimeout: 30000,
+      removeContainer: true,
+      ignoreElements: () => false,
+      onclone: (clonedDoc: unknown) => {
+        const doc = clonedDoc as globalThis.Document;
+        const textElements = doc.querySelectorAll('.print-card-number, .print-cell-number, .print-cell-name');
+        textElements.forEach((el) => {
+          const htmlEl = el as HTMLElement;
+          htmlEl.style.transform = 'translateY(-10px)';
+        });
+        const images = doc.querySelectorAll('img');
+        return Promise.all(
+          Array.from(images).map((img) => {
+            const htmlImg = img as HTMLImageElement;
+            if (htmlImg.complete) {
+              return Promise.resolve();
+            }
+            return new Promise<void>((resolve) => {
+              htmlImg.onload = () => resolve();
+              htmlImg.onerror = () => resolve();
+            });
+          })
+        );
+      },
+    });
+
+    const imgData = await new Promise<string>((resolve) => {
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => resolve(canvas.toDataURL('image/jpeg', 0.95));
+          reader.readAsDataURL(blob);
+        } else {
+          resolve(canvas.toDataURL('image/jpeg', 0.95));
+        }
+      }, 'image/jpeg', 0.95);
+    });
+
+    pdf.addImage(imgData, 'JPEG', margin.left, margin.top, contentWidth, contentHeight, undefined, 'FAST');
+    pdf.save(`bingo-card-${currentCard.id}.pdf`);
+  }
+
+  protected async saveCurrentCardAsJpg(): Promise<void> {
+    const currentCard = this.currentCard();
+    if (!currentCard) return;
+
+    const cardElement = document.querySelector('.print-page') as HTMLElement;
+    if (!cardElement) return;
+
+    const qualityScale = 6;
+
+    const canvas = await html2canvas(cardElement, {
+      scale: qualityScale,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+      imageTimeout: 30000,
+      removeContainer: true,
+      ignoreElements: () => false,
+      onclone: (clonedDoc: unknown) => {
+        const doc = clonedDoc as globalThis.Document;
+        const textElements = doc.querySelectorAll('.print-card-number, .print-cell-number, .print-cell-name');
+        textElements.forEach((el) => {
+          const htmlEl = el as HTMLElement;
+          htmlEl.style.transform = 'translateY(-10px)';
+        });
+        const images = doc.querySelectorAll('img');
+        return Promise.all(
+          Array.from(images).map((img) => {
+            const htmlImg = img as HTMLImageElement;
+            if (htmlImg.complete) {
+              return Promise.resolve();
+            }
+            return new Promise<void>((resolve) => {
+              htmlImg.onload = () => resolve();
+              htmlImg.onerror = () => resolve();
+            });
+          })
+        );
+      },
+    });
+
+    const link = document.createElement('a');
+    link.download = `bingo-card-${currentCard.id}.jpg`;
+    link.href = canvas.toDataURL('image/jpeg', 0.95);
+    link.click();
   }
 
   protected getEffectiveGridSize(): number {

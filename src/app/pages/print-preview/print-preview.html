@@ -122,6 +122,22 @@
             />
           } @else {
             <p-button
+              icon="pi pi-file-pdf"
+              severity="danger"
+              (onClick)="saveCurrentCardAsPdf()"
+              ariaLabel="Сохранить бланк в PDF"
+              pTooltip="Сохранить текущий бланк в PDF"
+              tooltipPosition="top"
+            />
+            <p-button
+              icon="pi pi-image"
+              severity="success"
+              (onClick)="saveCurrentCardAsJpg()"
+              ariaLabel="Сохранить бланк в JPG"
+              pTooltip="Сохранить текущий бланк в JPG"
+              tooltipPosition="top"
+            />
+            <p-button
               icon="pi pi-angle-right"
               severity="secondary"
               (onClick)="navigateToNext()"
