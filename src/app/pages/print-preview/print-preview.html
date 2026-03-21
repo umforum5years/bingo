@@ -172,12 +172,18 @@
           @for (cell of currentCard()!.cells; track cell.number) {
             <div class="print-bingo-cell">
               @if (displayMode() === 'number') {
-                <span class="print-cell-number" [style.font-size.pt]="cellNumberFontSize()">{{ cell.number }}</span>
+                <div class="print-cell-content">
+                  <span class="print-cell-number" [style.font-size.pt]="cellNumberFontSize()">{{ cell.number }}</span>
+                </div>
               } @else if (displayMode() === 'name') {
-                <span class="print-cell-name" [style.font-size.pt]="cellNameFontSize()">{{ cell.name }}</span>
+                <div class="print-cell-content">
+                  <span class="print-cell-name" [style.font-size.pt]="cellNameFontSize()">{{ cell.name }}</span>
+                </div>
               } @else {
-                <span class="print-cell-number" [style.font-size.pt]="cellNumberFontSize()">{{ cell.number }}</span>
-                <span class="print-cell-name" [style.font-size.pt]="cellNameFontSize()">{{ cell.name }}</span>
+                <div class="print-cell-content">
+                  <span class="print-cell-number" [style.font-size.pt]="cellNumberFontSize()">{{ cell.number }}</span>
+                  <span class="print-cell-name" [style.font-size.pt]="cellNameFontSize()">{{ cell.name }}</span>
+                </div>
               }
             </div>
           }

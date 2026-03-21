@@ -142,7 +142,6 @@
   align-items: center;
   box-sizing: border-box;
   position: relative;
-  overflow: hidden;
 }
 
 .print-page-background-wrapper {
@@ -197,6 +196,7 @@
   text-align: center;
   position: relative;
   z-index: 1;
+  line-height: 1.2;
 }
 
 :host-context(.dark-theme) .print-card-number {
@@ -223,6 +223,7 @@
   text-align: center;
   padding: 2mm;
   box-sizing: border-box;
+  position: relative;
 }
 
 :host-context(.dark-theme) .print-bingo-cell {
@@ -234,7 +235,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1mm;
+  gap: 2px;
+  width: 100%;
 }
 
 .print-cell-number {

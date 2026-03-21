@@ -240,6 +240,16 @@ export class PrintPreview {
         // Ensure images are loaded at full quality
         onclone: (clonedDoc: unknown, element: HTMLElement) => {
           const doc = clonedDoc as globalThis.Document;
+          
+          // Fix text positioning for html2canvas rendering
+          // Compensate for text baseline shift in canvas
+          const textElements = doc.querySelectorAll('.print-card-number, .print-cell-number, .print-cell-name');
+          textElements.forEach((el) => {
+            const htmlEl = el as HTMLElement;
+            htmlEl.style.transform = 'translateY(-10px)';
+          });
+          
+          // Ensure images are loaded
           const images = doc.querySelectorAll('img');
           return Promise.all(
             Array.from(images).map((img) => {
@@ -276,7 +286,7 @@ export class PrintPreview {
       }
 
       // Добавляем изображение на страницу с полным размером
-      pdf.addImage(imgData, 'PNG', margin.left, margin.top, contentWidth, contentHeight, undefined, 'NONE');
+      pdf.addImage(imgData, 'JPEG', margin.left, margin.top, contentWidth, contentHeight, undefined, 'FAST');
 
       this.printedCount.set(index + 1);
 
@@ -343,6 +353,16 @@ export class PrintPreview {
         // Ensure images are loaded at full quality
         onclone: (clonedDoc: unknown, element: HTMLElement) => {
           const doc = clonedDoc as globalThis.Document;
+          
+          // Fix text positioning for html2canvas rendering
+          // Compensate for text baseline shift in canvas
+          const textElements = doc.querySelectorAll('.print-card-number, .print-cell-number, .print-cell-name');
+          textElements.forEach((el) => {
+            const htmlEl = el as HTMLElement;
+            htmlEl.style.transform = 'translateY(-10px)';
+          });
+          
+          // Ensure images are loaded
           const images = doc.querySelectorAll('img');
           return Promise.all(
             Array.from(images).map((img) => {
