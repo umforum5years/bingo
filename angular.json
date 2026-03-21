@@ -28,7 +28,16 @@
               "src/styles.css"
             ],
             "outputPath": "docs",
-            "serviceWorker": "ngsw-config.json"
+            "serviceWorker": "ngsw-config.json",
+            "allowedCommonJsDependencies": [
+              "html2canvas",
+              "jspdf",
+              "file-saver",
+              "docx",
+              "canvg",
+              "raf",
+              "rgbcolor"
+            ]
           },
           "configurations": {
             "production": {

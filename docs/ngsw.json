@@ -1,0 +1,99 @@
+{
+  "configVersion": 1,
+  "timestamp": 1774093276510,
+  "index": "/bingo/index.html",
+  "assetGroups": [
+    {
+      "name": "app",
+      "installMode": "prefetch",
+      "updateMode": "prefetch",
+      "cacheQueryOptions": {
+        "ignoreVary": true
+      },
+      "urls": [
+        "/bingo/chunk-7SE2Z7Z4.js",
+        "/bingo/chunk-7VYH33B3.js",
+        "/bingo/chunk-BFJTUMK4.js",
+        "/bingo/chunk-C6Q5SG76.js",
+        "/bingo/chunk-FK6H3RFT.js",
+        "/bingo/chunk-MGGNTQOZ.js",
+        "/bingo/favicon.ico",
+        "/bingo/index.html",
+        "/bingo/main-L6DFS2LG.js",
+        "/bingo/manifest.webmanifest",
+        "/bingo/styles-QAUB25V7.css"
+      ],
+      "patterns": []
+    },
+    {
+      "name": "assets",
+      "installMode": "lazy",
+      "updateMode": "prefetch",
+      "cacheQueryOptions": {
+        "ignoreVary": true
+      },
+      "urls": [
+        "/bingo/icons/icon.svg",
+        "/bingo/media/primeicons-4GST5W3O.woff2",
+        "/bingo/media/primeicons-DHQU4SEP.svg",
+        "/bingo/media/primeicons-GEFHGEHP.ttf",
+        "/bingo/media/primeicons-P53SE5CV.woff"
+      ],
+      "patterns": []
+    }
+  ],
+  "dataGroups": [
+    {
+      "name": "api-freshness",
+      "patterns": [],
+      "strategy": "freshness",
+      "maxSize": 100,
+      "maxAge": 86400000,
+      "cacheQueryOptions": {
+        "ignoreVary": true
+      },
+      "version": 1
+    }
+  ],
+  "hashTable": {
+    "/bingo/chunk-7SE2Z7Z4.js": "e8911c09c9accc747f3253074b6cddece51057ed",
+    "/bingo/chunk-7VYH33B3.js": "cf4fb59259b5291ad0d101d21520be4bdd593f04",
+    "/bingo/chunk-BFJTUMK4.js": "f8e46dc1fb7420005cbed2e6e8afe40d7c38b8b9",
+    "/bingo/chunk-C6Q5SG76.js": "fd4fc33dfc3c6ef846db1272f907a0dbbbb1e374",
+    "/bingo/chunk-FK6H3RFT.js": "3c538698719f1cf34410542b8c702bc484e025ee",
+    "/bingo/chunk-MGGNTQOZ.js": "9f2a1d0b512bebfff0013113004a9a06de1a9775",
+    "/bingo/favicon.ico": "9c39f434fe1261f68c5e3eefdf734630d99c5670",
+    "/bingo/icons/icon.svg": "1e8fd80b3bcea8bfe8fa90ccd8a492d718b871cf",
+    "/bingo/index.html": "5b2315600166093d8d63de77e9ff97f92e5483d9",
+    "/bingo/main-L6DFS2LG.js": "196adaa27fb931b30dc1c3de55c312d69cc5e90d",
+    "/bingo/manifest.webmanifest": "51e5c96ebc778407eb49c5946bed6ec193d8505a",
+    "/bingo/media/primeicons-4GST5W3O.woff2": "837c1279b6af9d297f34fdb43e6fcc9206a79f32",
+    "/bingo/media/primeicons-DHQU4SEP.svg": "a07ae39027c1a780b42fd82fad7575c2924d9d28",
+    "/bingo/media/primeicons-GEFHGEHP.ttf": "3b878ca7e88945a8ec25814810b95367d8977ae6",
+    "/bingo/media/primeicons-P53SE5CV.woff": "361e3af71bb4e515feead2f787348a92a5527158",
+    "/bingo/styles-QAUB25V7.css": "c6ca70c9ae0768076d23dcd45f0bd1c7f02f1734"
+  },
+  "navigationUrls": [
+    {
+      "positive": true,
+      "regex": "^\\/.*$"
+    },
+    {
+      "positive": false,
+      "regex": "^\\/(?:.+\\/)?[^/]*\\.[^/]*$"
+    },
+    {
+      "positive": false,
+      "regex": "^\\/(?:.+\\/)?[^/]*__$"
+    },
+    {
+      "positive": false,
+      "regex": "^\\/(?:.+\\/)?[^/]*__[^/]*\\/__$"
+    },
+    {
+      "positive": false,
+      "regex": "^\\/(?:.+\\/)?[^/]*__[^/]*\\/__\\/[^/]*$"
+    }
+  ],
+  "navigationRequestStrategy": "performance"
+}
