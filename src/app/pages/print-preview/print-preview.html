@@ -153,11 +153,14 @@
         class="print-page"
         [class.portrait]="orientation() === 'portrait'"
         [class.landscape]="orientation() === 'landscape'"
-        [style.background-image]="backgroundImage() ? 'url(' + backgroundImage() + ')' : null"
-        [style.background-size]="'cover'"
-        [style.background-position]="'center'"
-        [style.background-repeat]="'no-repeat'"
       >
+        @if (backgroundImage()) {
+          <img
+            class="print-page-background"
+            [src]="backgroundImage()"
+            alt="Background"
+          />
+        }
         <div class="print-card-number">№{{ currentCard()!.id }}</div>
         <div
           class="print-bingo-grid"

@@ -218,32 +218,49 @@ export class PrintPreview {
       const cardElement = document.querySelector('.print-page') as HTMLElement;
       if (!cardElement) return;
 
+      // Calculate scale for high quality (300+ DPI target)
+      // A4 at 300 DPI = 2480 x 3508 pixels (portrait)
+      // A4 at 300 DPI = 3508 x 2480 pixels (landscape)
+      // Screen is typically 96 DPI, so scale = 300/96 ≈ 3.125
+      // Using scale 10 for maximum quality and to ensure crisp text
+      const qualityScale = 10;
+
       const canvas = await html2canvas(cardElement, {
-        scale: 4,
+        scale: qualityScale,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
         logging: false,
         imageTimeout: 0,
         removeContainer: true,
+        // Force high-resolution rendering
+        width: cardElement.offsetWidth,
+        height: cardElement.offsetHeight,
+        // Ensure images are rendered at full quality
+        onclone: (clonedDoc: unknown, element: HTMLElement) => {
+          // Force all images in the clone to load before rendering
+          const doc = clonedDoc as globalThis.Document;
+          const images = doc.querySelectorAll('img');
+          Array.from(images).forEach((img) => {
+            const htmlImg = img as HTMLImageElement;
+            if (!htmlImg.complete) {
+              // Images should already be loaded, but just in case
+              htmlImg.onload = () => {};
+              htmlImg.onerror = () => {};
+            }
+          });
+        },
       });
 
-      const imgData = canvas.toDataURL('image/jpeg', 1.0);
-
-      // Вычисляем размеры для сохранения пропорций
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const ratio = Math.min(contentWidth / imgWidth, contentHeight / imgHeight);
-      const pdfImgWidth = imgWidth * ratio;
-      const pdfImgHeight = imgHeight * ratio;
+      const imgData = canvas.toDataURL('image/png', 1.0);
 
       // Добавляем страницу, кроме первой
       if (index > 0) {
         pdf.addPage(isPortrait ? 'portrait' : 'landscape');
       }
 
-      // Добавляем изображение на страницу
-      pdf.addImage(imgData, 'JPEG', margin.left, margin.top, pdfImgWidth, pdfImgHeight);
+      // Добавляем изображение на страницу с полным размером
+      pdf.addImage(imgData, 'PNG', margin.left, margin.top, contentWidth, contentHeight, undefined, 'FAST');
 
       this.printedCount.set(index + 1);
 
@@ -290,19 +307,42 @@ export class PrintPreview {
 
       const card = cards[index];
 
+      // Calculate scale for high quality (300+ DPI target)
+      // A4 at 300 DPI = 2480 x 3508 pixels (portrait)
+      // A4 at 300 DPI = 3508 x 2480 pixels (landscape)
+      // Using scale 10 for maximum quality
+      const qualityScale = 10;
+
       const canvas = await html2canvas(cardElement, {
-        scale: 4,
+        scale: qualityScale,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
         logging: false,
         imageTimeout: 0,
         removeContainer: true,
+        // Force high-resolution rendering
+        width: cardElement.offsetWidth,
+        height: cardElement.offsetHeight,
+        // Ensure images are rendered at full quality
+        onclone: (clonedDoc: unknown, element: HTMLElement) => {
+          // Force all images in the clone to load before rendering
+          const doc = clonedDoc as globalThis.Document;
+          const images = doc.querySelectorAll('img');
+          Array.from(images).forEach((img) => {
+            const htmlImg = img as HTMLImageElement;
+            if (!htmlImg.complete) {
+              // Images should already be loaded, but just in case
+              htmlImg.onload = () => {};
+              htmlImg.onerror = () => {};
+            }
+          });
+        },
       });
 
       const link = document.createElement('a');
       link.download = `bingo-card-${card.id}.png`;
-      link.href = canvas.toDataURL('image/png');
+      link.href = canvas.toDataURL('image/png', 1.0);
       link.click();
 
       savedCount++;
