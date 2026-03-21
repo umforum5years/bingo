@@ -196,6 +196,10 @@ export class PrintPreview {
 
     const saveCard = async (index: number) => {
       if (this.isCancelling()) {
+        // Save whatever we have so far
+        if (index > 0) {
+          pdf.save(`bingo-cards-${new Date().toISOString().slice(0, 10)}-partial.pdf`);
+        }
         this.isPrinting.set(false);
         this.printedCount.set(0);
         this.isCancelling.set(false);
@@ -221,7 +225,7 @@ export class PrintPreview {
       // Calculate scale for high quality (300+ DPI target)
       // A4 at 300 DPI = 2480 x 3508 pixels (portrait)
       // Using scale 6 for maximum quality
-      const qualityScale = 6;
+      const qualityScale = 3;
 
       const canvas = await html2canvas(cardElement, {
         scale: qualityScale,
@@ -252,18 +256,18 @@ export class PrintPreview {
         },
       });
 
-      // Convert canvas to blob for maximum quality
+      // Convert canvas to blob for maximum quality (JPEG for smaller file size)
       const imgData = await new Promise<string>((resolve) => {
         canvas.toBlob((blob) => {
           if (blob) {
             const reader = new FileReader();
             reader.onload = () => resolve(reader.result as string);
-            reader.onerror = () => resolve(canvas.toDataURL('image/png', 1.0));
+            reader.onerror = () => resolve(canvas.toDataURL('image/jpeg', 0.95));
             reader.readAsDataURL(blob);
           } else {
-            resolve(canvas.toDataURL('image/png', 1.0));
+            resolve(canvas.toDataURL('image/jpeg', 0.95));
           }
-        }, 'image/png', 1.0);
+        }, 'image/jpeg', 0.95);
       });
 
       // Добавляем страницу, кроме первой
@@ -282,7 +286,7 @@ export class PrintPreview {
     await saveCard(0);
   }
 
-  protected async saveCardsAsPng(): Promise<void> {
+  protected async saveCardsAsJpg(): Promise<void> {
     const cards = this.bingoCards();
     if (cards.length === 0) return;
 
@@ -296,6 +300,8 @@ export class PrintPreview {
 
     const saveCard = async (index: number) => {
       if (this.isCancelling()) {
+        // Already saved files are downloaded, just stop the process
+        console.log(`Saved ${savedCount} cards before cancellation`);
         this.isPrinting.set(false);
         this.printedCount.set(0);
         this.isCancelling.set(false);
@@ -322,7 +328,7 @@ export class PrintPreview {
       // Calculate scale for high quality (300+ DPI target)
       // A4 at 300 DPI = 2480 x 3508 pixels (portrait)
       // Using scale 6 for maximum quality
-      const qualityScale = 6;
+      const qualityScale = 3;
 
       const canvas = await html2canvas(cardElement, {
         scale: qualityScale,
@@ -354,8 +360,8 @@ export class PrintPreview {
       });
 
       const link = document.createElement('a');
-      link.download = `bingo-card-${card.id}.png`;
-      link.href = canvas.toDataURL('image/png', 1.0);
+      link.download = `bingo-card-${card.id}.jpg`;
+      link.href = canvas.toDataURL('image/jpeg', 0.95);
       link.click();
 
       savedCount++;
