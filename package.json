@@ -5,7 +5,8 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
-    "build:gh": "npm run build -- --base-href /bingo/ && node scripts/post-build.js",
+    "build:gh": "node scripts/pre-build.js && npm run build -- --base-href /bingo/ && node scripts/post-build.js",
+    "build:ci": "node scripts/pre-build.js && ng build --base-href /bingo/ && node scripts/post-build.js",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
