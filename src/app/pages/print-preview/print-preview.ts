@@ -1,20 +1,21 @@
-import { Component, signal } from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import html2canvas from 'html2canvas';
-import { Button } from 'primeng/button';
-import { Select } from 'primeng/select';
 import {
+  AlignmentType,
   Document,
   Packer,
-  Table,
-  TableRow,
-  TableCell,
-  WidthType,
   Paragraph,
+  Table,
+  TableCell,
+  TableRow,
   TextRun,
-  AlignmentType,
+  WidthType,
 } from 'docx';
 import { saveAs } from 'file-saver';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import { Button } from 'primeng/button';
+import { Select } from 'primeng/select';
 
 interface BingoCell {
   name: string;
@@ -48,6 +49,9 @@ export class PrintPreview {
   protected readonly orientation = signal<'portrait' | 'landscape'>('portrait');
   protected readonly cellNumberFontSize = signal<number>(16);
   protected readonly cellNameFontSize = signal<number>(12);
+  protected readonly currentIndex = signal<number>(0);
+  protected readonly isPrinting = signal<boolean>(false);
+  protected readonly printedCount = signal<number>(0);
 
   protected readonly displayModes: { label: string; value: DisplayMode }[] = [
     { label: 'Название и номер', value: 'both' },
@@ -59,6 +63,21 @@ export class PrintPreview {
     { label: 'Портретная (A4)', value: 'portrait' },
     { label: 'Альбомная (A4)', value: 'landscape' },
   ];
+
+  protected readonly currentCard = computed(() => {
+    const cards = this.bingoCards();
+    const index = this.currentIndex();
+    return cards[index] ?? null;
+  });
+
+  protected readonly totalCards = computed(() => this.bingoCards().length);
+
+  protected readonly isFirstCard = computed(() => this.currentIndex() === 0);
+
+  protected readonly isLastCard = computed(() => {
+    const cards = this.bingoCards();
+    return this.currentIndex() >= cards.length - 1;
+  });
 
   protected loadBingoCards(): void {
     const fileInput = document.getElementById('loadCardsFileInput') as HTMLInputElement;
@@ -118,27 +137,129 @@ export class PrintPreview {
     this.backgroundImage.set(null);
   }
 
-  protected printCards(): void {
-    window.print();
+  protected navigateToFirst(): void {
+    this.currentIndex.set(0);
+  }
+
+  protected navigateToPrevious(): void {
+    const index = this.currentIndex();
+    if (index > 0) {
+      this.currentIndex.set(index - 1);
+    }
+  }
+
+  protected navigateToNext(): void {
+    const cards = this.bingoCards();
+    const index = this.currentIndex();
+    if (index < cards.length - 1) {
+      this.currentIndex.set(index + 1);
+    }
+  }
+
+  protected navigateToLast(): void {
+    const cards = this.bingoCards();
+    this.currentIndex.set(cards.length - 1);
+  }
+
+  protected async saveAsPdf(): Promise<void> {
+    const cards = this.bingoCards();
+    if (cards.length === 0) return;
+
+    const totalCards = cards.length;
+    const orientation = this.orientation();
+    const isPortrait = orientation === 'portrait';
+
+    // A4 размеры в мм
+    const pdf = new jsPDF({
+      orientation: isPortrait ? 'portrait' : 'landscape',
+      unit: 'mm',
+      format: 'a4',
+    });
+
+    const pageWidth = isPortrait ? 210 : 297;
+    const pageHeight = isPortrait ? 297 : 210;
+
+    // Поля в мм
+    const margin = { top: 0, right: 0, bottom: 0, left: 0 };
+    const contentWidth = pageWidth - margin.left - margin.right;
+    const contentHeight = pageHeight - margin.top - margin.bottom;
+
+    this.isPrinting.set(true);
+    this.printedCount.set(0);
+
+    const saveCard = async (index: number) => {
+      if (index >= totalCards) {
+        pdf.save(`bingo-cards-${new Date().toISOString().slice(0, 10)}.pdf`);
+        this.isPrinting.set(false);
+        this.printedCount.set(0);
+        return;
+      }
+
+      this.currentIndex.set(index);
+
+      // Даём DOM обновиться
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      const cardElement = document.querySelector('.print-page') as HTMLElement;
+      if (!cardElement) return;
+
+      const canvas = await html2canvas(cardElement, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+      });
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+
+      // Вычисляем размеры для сохранения пропорций
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(contentWidth / imgWidth, contentHeight / imgHeight);
+      const pdfImgWidth = imgWidth * ratio;
+      const pdfImgHeight = imgHeight * ratio;
+
+      // Добавляем страницу, кроме первой
+      if (index > 0) {
+        pdf.addPage(isPortrait ? 'portrait' : 'landscape');
+      }
+
+      // Добавляем изображение на страницу
+      pdf.addImage(imgData, 'JPEG', margin.left, margin.top, pdfImgWidth, pdfImgHeight);
+
+      this.printedCount.set(index + 1);
+
+      await saveCard(index + 1);
+    };
+
+    await saveCard(0);
   }
 
   protected async saveCardsAsPng(): Promise<void> {
     const cards = this.bingoCards();
     if (cards.length === 0) return;
 
-    const contentContainer = document.querySelector('.print-preview-content');
-    if (!contentContainer) return;
+    const totalCards = cards.length;
+    let savedCount = 0;
 
-    const cardElements = contentContainer.querySelectorAll('.print-page');
+    const saveCard = async (index: number) => {
+      if (index >= totalCards) return;
 
-    for (let i = 0; i < cardElements.length; i++) {
-      const cardElement = cardElements[i];
-      const card = cards[i];
+      this.currentIndex.set(index);
+      
+      // Даём DOM обновиться
+      await new Promise(resolve => setTimeout(resolve, 50));
 
-      const canvas = await html2canvas(cardElement as HTMLElement, {
+      const cardElement = document.querySelector('.print-page') as HTMLElement;
+      if (!cardElement) return;
+
+      const card = cards[index];
+
+      const canvas = await html2canvas(cardElement, {
         scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff',
+        logging: false,
       });
 
       const link = document.createElement('a');
@@ -146,9 +267,16 @@ export class PrintPreview {
       link.href = canvas.toDataURL('image/png');
       link.click();
 
-      // Small delay between downloads to avoid browser blocking
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
+      savedCount++;
+
+      const remaining = totalCards - index - 1;
+      
+      if (remaining > 0) {
+        await saveCard(index + 1);  
+      }
+    };
+
+    await saveCard(0);
   }
 
   protected getEffectiveGridSize(): number {
@@ -187,114 +315,7 @@ export class PrintPreview {
     const numberFontSize = this.cellNumberFontSize() * 2;
     const nameFontSize = this.cellNameFontSize() * 2;
 
-    const sections = cards.map((card) => {
-      const tableRows: TableRow[] = [];
-
-      for (let row = 0; row < size; row++) {
-        const cells: TableCell[] = [];
-        for (let col = 0; col < size; col++) {
-          const cellIndex = row * size + col;
-          const cell = card.cells[cellIndex];
-
-          const cellChildren: any[] = [];
-
-          if (displayMode === 'number') {
-            cellChildren.push(
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: cell.number.toString(),
-                    size: numberFontSize,
-                    bold: true,
-                  }),
-                ],
-                alignment: AlignmentType.CENTER,
-              })
-            );
-          } else if (displayMode === 'name') {
-            cellChildren.push(
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: cell.name,
-                    size: nameFontSize,
-                  }),
-                ],
-                alignment: AlignmentType.CENTER,
-              })
-            );
-          } else {
-            cellChildren.push(
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: cell.number.toString(),
-                    size: numberFontSize,
-                    bold: true,
-                  }),
-                ],
-                alignment: AlignmentType.CENTER,
-                spacing: { after: 50 },
-              }),
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: cell.name,
-                    size: nameFontSize,
-                  }),
-                ],
-                alignment: AlignmentType.CENTER,
-              })
-            );
-          }
-
-          cells.push(
-            new TableCell({
-              children: cellChildren,
-              width: { size: cellWidth, type: WidthType.DXA },
-              verticalAlign: 'center',
-            })
-          );
-        }
-        tableRows.push(
-          new TableRow({
-            children: cells,
-            height: { value: cellHeight, rule: 'exact' },
-          })
-        );
-      }
-
-      const cardTable = new Table({
-        rows: tableRows,
-        width: { size: tableWidthTwips, type: WidthType.DXA },
-        alignment: AlignmentType.CENTER,
-      });
-
-      const cardNumber = new Paragraph({
-        children: [
-          new TextRun({
-            text: `№${card.id}`,
-            size: 28,
-            bold: true,
-          }),
-        ],
-        alignment: AlignmentType.CENTER,
-        spacing: { before: 0, after: 100 },
-      });
-
-      return {
-        properties: {
-          page: {
-            size: {
-              width: pageSize.width,
-              height: pageSize.height,
-            },
-            margin,
-          },
-        },
-        children: [cardNumber, cardTable],
-      };
-    });
+    const sections = cards.map((card) => this.createCardSection(card, isPortrait, pageSize, margin, size, cellWidth, cellHeight, displayMode, numberFontSize, nameFontSize, tableWidthTwips));
 
     const doc: Document = new Document({
       sections,
@@ -302,6 +323,127 @@ export class PrintPreview {
 
     const blob = await Packer.toBlob(doc);
     saveAs(blob, `bingo-cards-${new Date().toISOString().slice(0, 10)}.docx`);
+  }
+
+  private createCardSection(
+    card: BingoCard,
+    isPortrait: boolean,
+    pageSize: { width: number; height: number },
+    margin: { top: number; right: number; bottom: number; left: number },
+    size: number,
+    cellWidth: number,
+    cellHeight: number,
+    displayMode: DisplayMode,
+    numberFontSize: number,
+    nameFontSize: number,
+    tableWidthTwips: number
+  ) {
+    const tableRows: TableRow[] = [];
+
+    for (let row = 0; row < size; row++) {
+      const cells: TableCell[] = [];
+      for (let col = 0; col < size; col++) {
+        const cellIndex = row * size + col;
+        const cell = card.cells[cellIndex];
+
+        const cellChildren: any[] = [];
+
+        if (displayMode === 'number') {
+          cellChildren.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: cell.number.toString(),
+                  size: numberFontSize,
+                  bold: true,
+                }),
+              ],
+              alignment: AlignmentType.CENTER,
+            })
+          );
+        } else if (displayMode === 'name') {
+          cellChildren.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: cell.name,
+                  size: nameFontSize,
+                }),
+              ],
+              alignment: AlignmentType.CENTER,
+            })
+          );
+        } else {
+          cellChildren.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: cell.number.toString(),
+                  size: numberFontSize,
+                  bold: true,
+                }),
+              ],
+              alignment: AlignmentType.CENTER,
+              spacing: { after: 50 },
+            }),
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: cell.name,
+                  size: nameFontSize,
+                }),
+              ],
+              alignment: AlignmentType.CENTER,
+            })
+          );
+        }
+
+        cells.push(
+          new TableCell({
+            children: cellChildren,
+            width: { size: cellWidth, type: WidthType.DXA },
+            verticalAlign: 'center',
+          })
+        );
+      }
+      tableRows.push(
+        new TableRow({
+          children: cells,
+          height: { value: cellHeight, rule: 'exact' },
+        })
+      );
+    }
+
+    const cardTable = new Table({
+      rows: tableRows,
+      width: { size: tableWidthTwips, type: WidthType.DXA },
+      alignment: AlignmentType.CENTER,
+    });
+
+    const cardNumber = new Paragraph({
+      children: [
+        new TextRun({
+          text: `№${card.id}`,
+          size: 28,
+          bold: true,
+        }),
+      ],
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 0, after: 100 },
+    });
+
+    return {
+      properties: {
+        page: {
+          size: {
+            width: pageSize.width,
+            height: pageSize.height,
+          },
+          margin,
+        },
+      },
+      children: [cardNumber, cardTable],
+    };
   }
 
   protected getCellDisplay(cell: BingoCell): string {

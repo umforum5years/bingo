@@ -47,6 +47,52 @@
   gap: 0.5rem;
 }
 
+.navigation-section {
+  margin-top: 1rem;
+  padding: 1rem 1.5rem;
+  background: #f3f4f6;
+  border-radius: 0.5rem;
+}
+
+:host-context(.dark-theme) .navigation-section {
+  background: #27272a;
+}
+
+.navigation-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.page-indicator {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+  min-width: 180px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+:host-context(.dark-theme) .page-indicator {
+  color: #e4e4e7;
+}
+
+.print-progress {
+  font-size: 0.875rem;
+  color: #059669;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+:host-context(.dark-theme) .print-progress {
+  color: #34d399;
+}
+
 .control-label {
   font-size: 0.875rem;
   color: #6b7280;
