@@ -145,20 +145,36 @@
   overflow: hidden;
 }
 
-.print-page-background {
+.print-page-background-wrapper {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.print-page-background {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  min-width: 100%;
+  min-height: 100%;
+  max-width: none;
+  max-height: none;
   object-fit: cover;
   object-position: center;
-  /* High-quality image rendering */
+  /* High-quality image rendering - disable smoothing for sharp details */
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
+  image-rendering: high-quality;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
-  z-index: 0;
+  /* Transform to center the image */
+  transform: translate(-50%, -50%);
 }
 
 .print-page.portrait {
@@ -179,6 +195,7 @@
   margin-bottom: 1cm;
   color: #1f2937;
   text-align: center;
+  position: relative;
   z-index: 1;
 }
 
@@ -191,6 +208,7 @@
   gap: 2mm;
   width: 100%;
   height: calc(100% - 6cm - 14pt);
+  position: relative;
   z-index: 1;
 }
 

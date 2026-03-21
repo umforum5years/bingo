@@ -155,11 +155,14 @@
         [class.landscape]="orientation() === 'landscape'"
       >
         @if (backgroundImage()) {
-          <img
-            class="print-page-background"
-            [src]="backgroundImage()"
-            alt="Background"
-          />
+          <div class="print-page-background-wrapper">
+            <img
+              class="print-page-background"
+              [src]="backgroundImage()"
+              alt="Background"
+              decoding="async"
+            />
+          </div>
         }
         <div class="print-card-number">№{{ currentCard()!.id }}</div>
         <div
