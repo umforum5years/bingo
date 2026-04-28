@@ -183,7 +183,7 @@
         <div class="print-card-number">№{{ currentCard()!.id }}</div>
         <div
           class="print-bingo-grid"
-          [style.grid-template-columns]="'repeat(' + getEffectiveGridSize() + ', 1fr)'"
+          [style.grid-template-columns]="'repeat(' + getEffectiveGridSize().columns + ', 1fr)'"
         >
           @for (cell of currentCard()!.cells; track cell.number) {
             <div class="print-bingo-cell">

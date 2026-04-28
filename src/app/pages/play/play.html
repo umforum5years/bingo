@@ -166,7 +166,7 @@
                 <div class="matched-card-title-row">
                   <span class="matched-card-title">Бланк №{{ matched.card.id ?? (i + 1) }}</span>
                   @if (matched.card.gridSize) {
-                    <span class="matched-card-size">{{ matched.card.gridSize }}x{{ matched.card.gridSize }}</span>
+                    <span class="matched-card-size">{{ getGridSizeDisplay(matched.card.gridSize) }}</span>
                   }
                   @if (matched.hasNewCompletion) {
                     <span class="bell-icon">🔔</span>
@@ -188,11 +188,11 @@
                 <div class="completed-indicators">
                   <span class="completed-indicator" [class.completed]="matched.completedRows > 0">
                     <span class="indicator-icon">↔️</span>
-                    <span class="indicator-count">{{ matched.completedRows }}/{{ matched.card.gridSize || 5 }}</span>
+                    <span class="indicator-count">{{ matched.completedRows }}/{{ getGridRows(matched.card.gridSize) }}</span>
                   </span>
                   <span class="completed-indicator" [class.completed]="matched.completedCols > 0">
                     <span class="indicator-icon">↕️</span>
-                    <span class="indicator-count">{{ matched.completedCols }}/{{ matched.card.gridSize || 5 }}</span>
+                    <span class="indicator-count">{{ matched.completedCols }}/{{ getGridColumns(matched.card.gridSize) }}</span>
                   </span>
                   <span class="completed-indicator" [class.completed]="matched.completedDiagonals > 0">
                     <span class="indicator-icon">🔀</span>
@@ -202,7 +202,7 @@
               </div>
               <div 
                 class="matched-numbers"
-                [style.grid-template-columns]="'repeat(' + (matched.card.gridSize || 5) + ', 1fr)'"
+                [style.grid-template-columns]="'repeat(' + getGridColumns(matched.card.gridSize) + ', 1fr)'"
               >
                 @for (num of matched.card.numbers; track num) {
                   <span 

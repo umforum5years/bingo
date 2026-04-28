@@ -26,7 +26,7 @@ interface BingoCell {
 interface BingoCard {
   id: number;
   cells: BingoCell[];
-  gridSize?: number;
+  gridSize?: { rows: number; columns: number } | number;
   displayMode?: 'name' | 'number' | 'both';
 }
 
@@ -47,7 +47,7 @@ export class PrintPreview {
   protected readonly bingoCards = signal<BingoCard[]>([]);
   protected readonly displayMode = signal<DisplayMode>('both');
   protected readonly backgroundImage = signal<string | null>(null);
-  protected readonly gridSize = signal<number>(5);
+  protected readonly gridSize = signal<{ rows: number; columns: number }>({ rows: 5, columns: 5 });
   protected readonly orientation = signal<'portrait' | 'landscape'>('portrait');
   protected readonly cellNumberFontSize = signal<number>(16);
   protected readonly cellNameFontSize = signal<number>(12);
@@ -98,7 +98,7 @@ export class PrintPreview {
           if (Array.isArray(json)) {
             const loadedCards: BingoCard[] = json.map((item, index) => ({
               id: item.id ?? index + 1,
-              gridSize: item.gridSize || 5,
+              gridSize: item.gridSize || { rows: 5, columns: 5 },
               displayMode: item.displayMode || 'both',
               cells: (item.numbers || []).map((num: number, i: number) => ({
                 number: num,
@@ -107,7 +107,12 @@ export class PrintPreview {
             }));
             this.bingoCards.set(loadedCards);
             if (loadedCards.length > 0) {
-              this.gridSize.set(loadedCards[0].gridSize || 5);
+              const gridSize = loadedCards[0].gridSize;
+              if (typeof gridSize === 'object' && gridSize !== null) {
+                this.gridSize.set(gridSize);
+              } else if (typeof gridSize === 'number') {
+                this.gridSize.set({ rows: gridSize, columns: gridSize });
+              }
               this.displayMode.set(loadedCards[0].displayMode || 'both');
             }
           }
@@ -515,10 +520,14 @@ export class PrintPreview {
     link.click();
   }
 
-  protected getEffectiveGridSize(): number {
+  protected getEffectiveGridSize(): { rows: number; columns: number } {
     const cards = this.bingoCards();
     if (cards.length > 0 && cards[0].gridSize) {
-      return cards[0].gridSize;
+      const gridSize = cards[0].gridSize;
+      if (typeof gridSize === 'object') {
+        return gridSize;
+      }
+      return { rows: gridSize, columns: gridSize };
     }
     return this.gridSize();
   }
@@ -544,14 +553,14 @@ export class PrintPreview {
       ? { top: 2835, right: 567, bottom: 2835, left: 567 }
       : { top: 567, right: 567, bottom: 567, left: 567 };
 
-    const size = this.getEffectiveGridSize();
-    const cellWidth = Math.floor(tableWidthTwips / size);
-    const cellHeight = Math.floor(tableHeightTwips / size);
+    const gridSize = this.getEffectiveGridSize();
+    const cellWidth = Math.floor(tableWidthTwips / gridSize.columns);
+    const cellHeight = Math.floor(tableHeightTwips / gridSize.rows);
     const displayMode = this.displayMode();
     const numberFontSize = this.cellNumberFontSize() * 2;
     const nameFontSize = this.cellNameFontSize() * 2;
 
-    const sections = cards.map((card) => this.createCardSection(card, isPortrait, pageSize, margin, size, cellWidth, cellHeight, displayMode, numberFontSize, nameFontSize, tableWidthTwips));
+    const sections = cards.map((card) => this.createCardSection(card, isPortrait, pageSize, margin, gridSize, cellWidth, cellHeight, displayMode, numberFontSize, nameFontSize, tableWidthTwips));
 
     const doc: Document = new Document({
       sections,
@@ -566,7 +575,7 @@ export class PrintPreview {
     isPortrait: boolean,
     pageSize: { width: number; height: number },
     margin: { top: number; right: number; bottom: number; left: number },
-    size: number,
+    gridSize: { rows: number; columns: number },
     cellWidth: number,
     cellHeight: number,
     displayMode: DisplayMode,
@@ -576,10 +585,10 @@ export class PrintPreview {
   ) {
     const tableRows: TableRow[] = [];
 
-    for (let row = 0; row < size; row++) {
+    for (let row = 0; row < gridSize.rows; row++) {
       const cells: TableCell[] = [];
-      for (let col = 0; col < size; col++) {
-        const cellIndex = row * size + col;
+      for (let col = 0; col < gridSize.columns; col++) {
+        const cellIndex = row * gridSize.columns + col;
         const cell = card.cells[cellIndex];
 
         const cellChildren: any[] = [];

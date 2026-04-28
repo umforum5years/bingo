@@ -1,14 +1,14 @@
-import { Component, signal, computed, effect, inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
+import { Component, computed, effect, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { MessageService } from 'primeng/api';
 import { Button } from 'primeng/button';
-import { InputNumber } from 'primeng/inputnumber';
 import { Card } from 'primeng/card';
-import { Tooltip } from 'primeng/tooltip';
+import { Dialog } from 'primeng/dialog';
+import { InputNumber } from 'primeng/inputnumber';
 import { SelectButton } from 'primeng/selectbutton';
 import { ToastModule } from 'primeng/toast';
-import { MessageService } from 'primeng/api';
-import { Dialog } from 'primeng/dialog';
+import { Tooltip } from 'primeng/tooltip';
 import { FireworksComponent } from '../../components/fireworks/fireworks.component';
 
 interface Artist {
@@ -22,7 +22,7 @@ type MatchedSortType = 'matchedCount' | 'completedTotal';
 
 interface BingoCard {
   id: number;
-  gridSize?: number;
+  gridSize?: { rows: number; columns: number } | number;
   displayMode?: DisplayMode;
   numbers: number[];
   artists: string[];
@@ -93,47 +93,58 @@ export class Play {
       .map((card) => {
         const matchedNumbers = card.numbers.filter((n) => drawn.includes(n));
         const matchPercentage = (matchedNumbers.length / card.numbers.length) * 100;
-        const gridSize = card.gridSize || 5;
+        
+        let gridSize = { rows: 5, columns: 5 };
+        if (card.gridSize) {
+          if (typeof card.gridSize === 'object') {
+            gridSize = card.gridSize;
+          } else {
+            gridSize = { rows: card.gridSize, columns: card.gridSize };
+          }
+        }
 
         // Подсчёт заполненных строк
         let completedRows = 0;
-        for (let row = 0; row < gridSize; row++) {
-          const rowStart = row * gridSize;
-          const rowNumbers = card.numbers.slice(rowStart, rowStart + gridSize);
+        for (let row = 0; row < gridSize.rows; row++) {
+          const rowStart = row * gridSize.columns;
+          const rowNumbers = card.numbers.slice(rowStart, rowStart + gridSize.columns);
           const allMatched = rowNumbers.every((n) => drawn.includes(n));
           if (allMatched) completedRows++;
         }
 
         // Подсчёт заполненных столбцов
         let completedCols = 0;
-        for (let col = 0; col < gridSize; col++) {
+        for (let col = 0; col < gridSize.columns; col++) {
           const colNumbers: number[] = [];
-          for (let row = 0; row < gridSize; row++) {
-            colNumbers.push(card.numbers[row * gridSize + col]);
+          for (let row = 0; row < gridSize.rows; row++) {
+            colNumbers.push(card.numbers[row * gridSize.columns + col]);
           }
           const allMatched = colNumbers.every((n) => drawn.includes(n));
           if (allMatched) completedCols++;
         }
 
-        // Подсчёт заполненных диагоналей
+        // Подсчёт заполненных диагоналей (только для квадратных сеток)
         let completedDiagonals = 0;
 
-        // Главная диагональ (слева-сверху вправо-вниз)
-        const mainDiagonalNumbers: number[] = [];
-        for (let i = 0; i < gridSize; i++) {
-          mainDiagonalNumbers.push(card.numbers[i * gridSize + i]);
-        }
-        if (mainDiagonalNumbers.every((n) => drawn.includes(n))) {
-          completedDiagonals++;
-        }
+        if (gridSize.rows === gridSize.columns && this.countDiagonals()) {
+          const size = gridSize.rows;
+          // Главная диагональ (слева-сверху вправо-вниз)
+          const mainDiagonalNumbers: number[] = [];
+          for (let i = 0; i < size; i++) {
+            mainDiagonalNumbers.push(card.numbers[i * size + i]);
+          }
+          if (mainDiagonalNumbers.every((n) => drawn.includes(n))) {
+            completedDiagonals++;
+          }
 
-        // Побочная диагональ (справа-сверху влево-вниз)
-        const antiDiagonalNumbers: number[] = [];
-        for (let i = 0; i < gridSize; i++) {
-          antiDiagonalNumbers.push(card.numbers[i * gridSize + (gridSize - 1 - i)]);
-        }
-        if (antiDiagonalNumbers.every((n) => drawn.includes(n))) {
-          completedDiagonals++;
+          // Побочная диагональ (справа-сверху влево-вниз)
+          const antiDiagonalNumbers: number[] = [];
+          for (let i = 0; i < size; i++) {
+            antiDiagonalNumbers.push(card.numbers[i * size + (size - 1 - i)]);
+          }
+          if (antiDiagonalNumbers.every((n) => drawn.includes(n))) {
+            completedDiagonals++;
+          }
         }
 
         const completedTotal = completedRows + completedCols + completedDiagonals;
@@ -605,5 +616,29 @@ export class Play {
     } else {
       return `${seconds} сек. назад`;
     }
+  }
+
+  protected getGridSizeDisplay(gridSize?: { rows: number; columns: number } | number): string {
+    if (!gridSize) return '5x5';
+    if (typeof gridSize === 'object') {
+      return `${gridSize.rows}x${gridSize.columns}`;
+    }
+    return `${gridSize}x${gridSize}`;
+  }
+
+  protected getGridColumns(gridSize?: { rows: number; columns: number } | number): number {
+    if (!gridSize) return 5;
+    if (typeof gridSize === 'object') {
+      return gridSize.columns;
+    }
+    return gridSize;
+  }
+
+  protected getGridRows(gridSize?: { rows: number; columns: number } | number): number {
+    if (!gridSize) return 5;
+    if (typeof gridSize === 'object') {
+      return gridSize.rows;
+    }
+    return gridSize;
   }
 }
