@@ -27,7 +27,8 @@ type DisplayMode = 'name' | 'number' | 'both';
 
 interface GridSize {
   label: string;
-  value: number;
+  rows: number;
+  columns: number;
 }
 
 @Component({
@@ -51,8 +52,8 @@ export class Design {
   protected readonly selectedFiles = signal<File[]>([]);
 
   // Bingo card generation
-  protected readonly gridSize = signal<number>(5);
-  protected readonly customGridSize = signal<number | null>(null);
+  protected readonly gridSize = signal<GridSize>({ label: '5x5', rows: 5, columns: 5 });
+  protected readonly customGridSize = signal<{ rows: number; columns: number } | null>(null);
   protected readonly useCustomGrid = signal<boolean>(false);
   protected readonly displayMode = signal<DisplayMode>('both');
   protected readonly cardCount = signal<number>(1);
@@ -60,12 +61,12 @@ export class Design {
   protected readonly pageOrientation = signal<'portrait' | 'landscape'>('portrait');
 
   protected readonly gridSizes: GridSize[] = [
-    { label: '5x5', value: 5 },
-    { label: '6x6', value: 6 },
-    { label: '7x7', value: 7 },
-    { label: '8x8', value: 8 },
-    { label: '9x9', value: 9 },
-    { label: '10x10', value: 10 },
+    { label: '5x5', rows: 5, columns: 5 },
+    { label: '6x6', rows: 6, columns: 6 },
+    { label: '7x7', rows: 7, columns: 7 },
+    { label: '8x8', rows: 8, columns: 8 },
+    { label: '9x9', rows: 9, columns: 9 },
+    { label: '10x10', rows: 10, columns: 10 },
   ];
 
   protected readonly displayModes: { label: string; value: DisplayMode }[] = [
@@ -206,22 +207,25 @@ export class Design {
     }
   }
 
-  protected getEffectiveGridSize(): number {
-    if (this.useCustomGrid() && this.customGridSize() && this.customGridSize()! >= 2) {
-      return this.customGridSize()!;
+  protected getEffectiveGridSize(): { rows: number; columns: number } {
+    if (this.useCustomGrid() && this.customGridSize()) {
+      const custom = this.customGridSize()!;
+      if (custom.rows >= 2 && custom.columns >= 2) {
+        return custom;
+      }
     }
     return this.gridSize();
   }
 
   protected generateBingoCards(): void {
     const artists = this.artists().filter((a) => a.number !== null);
-    const size = this.getEffectiveGridSize();
-    const totalCells = size * size;
+    const gridSize = this.getEffectiveGridSize();
+    const totalCells = gridSize.rows * gridSize.columns;
     const count = this.cardCount();
 
     if (artists.length < totalCells) {
       alert(
-        `Недостаточно исполнителей для сетки ${size}x${size}. Требуется минимум ${totalCells}, доступно ${artists.length}`
+        `Недостаточно исполнителей для сетки ${gridSize.rows}x${gridSize.columns}. Требуется минимум ${totalCells}, доступно ${artists.length}`
       );
       return;
     }
@@ -229,7 +233,7 @@ export class Design {
     const maxPossibleCards = this.calculateMaxCombinations(artists.length, totalCells);
     if (count > maxPossibleCards) {
       alert(
-        `Невозможно создать ${count} уникальных комбинаций. Максимально возможное количество для ${artists.length} исполнителей и сетки ${size}x${size}: ${maxPossibleCards}`
+        `Невозможно создать ${count} уникальных комбинаций. Максимально возможное количество для ${artists.length} исполнителей и сетки ${gridSize.rows}x${gridSize.columns}: ${maxPossibleCards}`
       );
       return;
     }
@@ -303,11 +307,11 @@ export class Design {
 
   protected saveBingoCardsJson(): void {
     const cards = this.bingoCards();
-    const size = this.getEffectiveGridSize();
+    const gridSize = this.getEffectiveGridSize();
     const displayMode = this.displayMode();
     const compactData = cards.map((card) => ({
       id: card.id,
-      gridSize: size,
+      gridSize: { rows: gridSize.rows, columns: gridSize.columns },
       displayMode,
       numbers: card.cells.map((c) => c.number),
       artists: card.cells.map((c) => c.name),

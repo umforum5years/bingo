@@ -130,14 +130,27 @@
     </div>
 
     @if (useCustomGrid()) {
-      <div>
-        <label class="block text-sm font-medium mb-1">Размер</label>
-        <p-inputnumber
-          [(ngModel)]="customGridSize"
-          [min]="2"
-          [max]="20"
-          placeholder="Например: 12"
-        />
+      <div class="flex gap-2">
+        <div>
+          <label class="block text-sm font-medium mb-1">Строк (Y)</label>
+          <p-inputnumber
+            [ngModel]="customGridSize()?.rows"
+            (ngModelChange)="customGridSize.set({ rows: $event ?? 2, columns: customGridSize()?.columns ?? 5 })"
+            [min]="2"
+            [max]="20"
+            placeholder="Например: 12"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Колонок (X)</label>
+          <p-inputnumber
+            [ngModel]="customGridSize()?.columns"
+            (ngModelChange)="customGridSize.set({ rows: customGridSize()?.rows ?? 5, columns: $event ?? 2 })"
+            [min]="2"
+            [max]="20"
+            placeholder="Например: 8"
+          />
+        </div>
       </div>
     }
 
@@ -233,11 +246,11 @@
         <div class="bingo-card">
           <div class="bingo-card-header">
             <span class="bingo-card-number">Бланк №{{ card.id }}</span>
-            <span class="bingo-card-size">{{ getEffectiveGridSize() }}x{{ getEffectiveGridSize() }}</span>
+            <span class="bingo-card-size">{{ getEffectiveGridSize().rows }}x{{ getEffectiveGridSize().columns }}</span>
           </div>
           <div
             class="bingo-grid"
-            [style.grid-template-columns]="'repeat(' + getEffectiveGridSize() + ', 1fr)'"
+            [style.grid-template-columns]="'repeat(' + getEffectiveGridSize().columns + ', 1fr)'"
           >
             @for (cell of card.cells; track cell.number) {
               <div class="bingo-cell">
