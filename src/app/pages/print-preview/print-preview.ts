@@ -34,12 +34,7 @@ type DisplayMode = 'name' | 'number' | 'both';
 
 @Component({
   selector: 'app-print-preview',
-  imports: [
-    Button,
-    Select,
-    FormsModule,
-    Tooltip
-  ],
+  imports: [Button, Select, FormsModule, Tooltip],
   templateUrl: './print-preview.html',
   styleUrl: './print-preview.css',
 })
@@ -85,6 +80,69 @@ export class PrintPreview {
   protected loadBingoCards(): void {
     const fileInput = document.getElementById('loadCardsFileInput') as HTMLInputElement;
     fileInput?.click();
+  }
+
+  private trimCanvasRightBottom(
+    canvas: HTMLCanvasElement,
+    cutRight: number,
+    cutBottom: number,
+  ): HTMLCanvasElement {
+    const trimmed = document.createElement('canvas');
+    trimmed.width = canvas.width - cutRight;
+    trimmed.height = canvas.height - cutBottom;
+    const ctx = trimmed.getContext('2d');
+    ctx?.drawImage(
+      canvas,
+      0,
+      0,
+      trimmed.width,
+      trimmed.height,
+      0,
+      0,
+      trimmed.width,
+      trimmed.height,
+    );
+    return trimmed;
+  }
+
+  // 🔥 Вспомогательная функция: обрезает канвас до точных размеров
+  private trimCanvasToExpectedSize(
+    canvas: HTMLCanvasElement,
+    expectedWidth: number,
+    expectedHeight: number,
+    cut: number = 0, // Количество пикселей для обрезки с каждой стороны (по умолчанию 0)
+  ): HTMLCanvasElement {
+    // Вычисляем размеры источника после обрезки краёв
+    const sourceX = cut;
+    const sourceY = cut;
+    const sourceWidth = canvas.width - cut * 2;
+    const sourceHeight = canvas.height - cut * 2;
+
+    // Защита от невалидных размеров
+    if (sourceWidth <= 0 || sourceHeight <= 0 || expectedWidth <= 0 || expectedHeight <= 0) {
+      return canvas;
+    }
+
+    const trimmed = document.createElement('canvas');
+    trimmed.width = expectedWidth;
+    trimmed.height = expectedHeight;
+    const ctx = trimmed.getContext('2d');
+
+    // 🔥 drawImage параметры:
+    // (источник, sourceX, sourceY, sourceW, sourceH, destX, destY, destW, destH)
+    ctx?.drawImage(
+      canvas,
+      sourceX, // 👈 Начинаем рисовать с cut пикселей слева
+      sourceY, // 👈 Начинаем рисовать с cut пикселей сверху
+      sourceWidth, // 👈 Ширина области после обрезки по горизонтали
+      sourceHeight, // 👈 Высота области после обрезки по вертикали
+      0, // 👈 В новом канвасе начинаем с (0, 0)
+      0,
+      expectedWidth, // 👈 Растягиваем/сжимаем до ожидаемого размера
+      expectedHeight,
+    );
+
+    return trimmed;
   }
 
   protected onCardsFileLoad(event: Event): void {
@@ -224,7 +282,7 @@ export class PrintPreview {
       this.currentIndex.set(index);
 
       // Даём DOM обновиться
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       const cardElement = document.querySelector('.print-page') as HTMLElement;
       if (!cardElement) return;
@@ -247,15 +305,17 @@ export class PrintPreview {
         // Ensure images are loaded at full quality
         onclone: (clonedDoc: unknown, element: HTMLElement) => {
           const doc = clonedDoc as globalThis.Document;
-          
+
           // Fix text positioning for html2canvas rendering
           // Compensate for text baseline shift in canvas
-          const textElements = doc.querySelectorAll('.print-card-number, .print-cell-number, .print-cell-name');
+          const textElements = doc.querySelectorAll(
+            '.print-card-number, .print-cell-number, .print-cell-name',
+          );
           textElements.forEach((el) => {
             const htmlEl = el as HTMLElement;
             htmlEl.style.transform = 'translateY(-10px)';
           });
-          
+
           // Ensure images are loaded
           const images = doc.querySelectorAll('img');
           return Promise.all(
@@ -268,23 +328,27 @@ export class PrintPreview {
                 htmlImg.onload = () => resolve();
                 htmlImg.onerror = () => resolve();
               });
-            })
+            }),
           );
         },
       });
 
       // Convert canvas to blob for maximum quality (JPEG for smaller file size)
       const imgData = await new Promise<string>((resolve) => {
-        canvas.toBlob((blob) => {
-          if (blob) {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result as string);
-            reader.onerror = () => resolve(canvas.toDataURL('image/jpeg', 0.95));
-            reader.readAsDataURL(blob);
-          } else {
-            resolve(canvas.toDataURL('image/jpeg', 0.95));
-          }
-        }, 'image/jpeg', 0.95);
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result as string);
+              reader.onerror = () => resolve(canvas.toDataURL('image/jpeg', 0.95));
+              reader.readAsDataURL(blob);
+            } else {
+              resolve(canvas.toDataURL('image/jpeg', 0.95));
+            }
+          },
+          'image/jpeg',
+          0.95,
+        );
       });
 
       // Добавляем страницу, кроме первой
@@ -293,7 +357,16 @@ export class PrintPreview {
       }
 
       // Добавляем изображение на страницу с полным размером
-      pdf.addImage(imgData, 'JPEG', margin.left, margin.top, contentWidth, contentHeight, undefined, 'FAST');
+      pdf.addImage(
+        imgData,
+        'JPEG',
+        margin.left,
+        margin.top,
+        contentWidth,
+        contentHeight,
+        undefined,
+        'FAST',
+      );
 
       this.printedCount.set(index + 1);
 
@@ -335,7 +408,7 @@ export class PrintPreview {
       this.currentIndex.set(index);
 
       // Даём DOM обновиться
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       const cardElement = document.querySelector('.print-page') as HTMLElement;
       if (!cardElement) return;
@@ -360,15 +433,17 @@ export class PrintPreview {
         // Ensure images are loaded at full quality
         onclone: (clonedDoc: unknown, element: HTMLElement) => {
           const doc = clonedDoc as globalThis.Document;
-          
+
           // Fix text positioning for html2canvas rendering
           // Compensate for text baseline shift in canvas
-          const textElements = doc.querySelectorAll('.print-card-number, .print-cell-number, .print-cell-name');
+          const textElements = doc.querySelectorAll(
+            '.print-card-number, .print-cell-number, .print-cell-name',
+          );
           textElements.forEach((el) => {
             const htmlEl = el as HTMLElement;
             htmlEl.style.transform = 'translateY(-10px)';
           });
-          
+
           // Ensure images are loaded
           const images = doc.querySelectorAll('img');
           return Promise.all(
@@ -381,15 +456,26 @@ export class PrintPreview {
                 htmlImg.onload = () => resolve();
                 htmlImg.onerror = () => resolve();
               });
-            })
+            }),
           );
         },
       });
 
+      // 🔥 ДОБАВЬТЕ ЭТОТ БЛОК: обрезка канваса до точных размеров
+      const expectedWidth = Math.round(cardElement.offsetWidth * qualityScale);
+      const expectedHeight = Math.round(cardElement.offsetHeight * qualityScale);
+      const finalCanvas = this.trimCanvasToExpectedSize(canvas, expectedWidth, expectedHeight, 6);
+
+      // 🔥 ИСПОЛЬЗУЙТЕ finalCanvas ВМЕСТО canvas НИЖЕ:
       const link = document.createElement('a');
       link.download = `bingo-card-${card.id}.jpg`;
-      link.href = canvas.toDataURL('image/jpeg', 0.95);
+      link.href = finalCanvas.toDataURL('image/jpeg', 0.95); // 👈 было canvas.toDataURL
       link.click();
+
+      // const link = document.createElement('a');
+      // link.download = `bingo-card-${card.id}.jpg`;
+      // link.href = canvas.toDataURL('image/jpeg', 0.95);
+      // link.click();
 
       savedCount++;
       this.printedCount.set(index + 1);
@@ -435,7 +521,9 @@ export class PrintPreview {
       ignoreElements: () => false,
       onclone: (clonedDoc: unknown) => {
         const doc = clonedDoc as globalThis.Document;
-        const textElements = doc.querySelectorAll('.print-card-number, .print-cell-number, .print-cell-name');
+        const textElements = doc.querySelectorAll(
+          '.print-card-number, .print-cell-number, .print-cell-name',
+        );
         textElements.forEach((el) => {
           const htmlEl = el as HTMLElement;
           htmlEl.style.transform = 'translateY(-10px)';
@@ -451,25 +539,38 @@ export class PrintPreview {
               htmlImg.onload = () => resolve();
               htmlImg.onerror = () => resolve();
             });
-          })
+          }),
         );
       },
     });
 
     const imgData = await new Promise<string>((resolve) => {
-      canvas.toBlob((blob) => {
-        if (blob) {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = () => resolve(canvas.toDataURL('image/jpeg', 0.95));
-          reader.readAsDataURL(blob);
-        } else {
-          resolve(canvas.toDataURL('image/jpeg', 0.95));
-        }
-      }, 'image/jpeg', 0.95);
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = () => resolve(canvas.toDataURL('image/jpeg', 0.95));
+            reader.readAsDataURL(blob);
+          } else {
+            resolve(canvas.toDataURL('image/jpeg', 0.95));
+          }
+        },
+        'image/jpeg',
+        0.95,
+      );
     });
 
-    pdf.addImage(imgData, 'JPEG', margin.left, margin.top, contentWidth, contentHeight, undefined, 'FAST');
+    pdf.addImage(
+      imgData,
+      'JPEG',
+      margin.left,
+      margin.top,
+      contentWidth,
+      contentHeight,
+      undefined,
+      'FAST',
+    );
     pdf.save(`bingo-card-${currentCard.id}.pdf`);
   }
 
@@ -493,7 +594,9 @@ export class PrintPreview {
       ignoreElements: () => false,
       onclone: (clonedDoc: unknown) => {
         const doc = clonedDoc as globalThis.Document;
-        const textElements = doc.querySelectorAll('.print-card-number, .print-cell-number, .print-cell-name');
+        const textElements = doc.querySelectorAll(
+          '.print-card-number, .print-cell-number, .print-cell-name',
+        );
         textElements.forEach((el) => {
           const htmlEl = el as HTMLElement;
           htmlEl.style.transform = 'translateY(-10px)';
@@ -509,14 +612,19 @@ export class PrintPreview {
               htmlImg.onload = () => resolve();
               htmlImg.onerror = () => resolve();
             });
-          })
+          }),
         );
       },
     });
 
+    // 🔥 Обрезка
+    const expectedWidth = Math.round(cardElement.offsetWidth * qualityScale);
+    const expectedHeight = Math.round(cardElement.offsetHeight * qualityScale);
+    const finalCanvas = this.trimCanvasToExpectedSize(canvas, expectedWidth, expectedHeight, 6);
+
     const link = document.createElement('a');
     link.download = `bingo-card-${currentCard.id}.jpg`;
-    link.href = canvas.toDataURL('image/jpeg', 0.95);
+    link.href = finalCanvas.toDataURL('image/jpeg', 0.95); // 👈 finalCanvas
     link.click();
   }
 
@@ -541,9 +649,7 @@ export class PrintPreview {
 
     const orientation = this.orientation();
     const isPortrait = orientation === 'portrait';
-    const pageSize = isPortrait
-      ? { width: 11906, height: 16838 }
-      : { width: 16838, height: 11906 };
+    const pageSize = isPortrait ? { width: 11906, height: 16838 } : { width: 16838, height: 11906 };
 
     const TWIPS_PER_CM = 567;
     const tableWidthTwips = 18 * TWIPS_PER_CM;
@@ -560,7 +666,21 @@ export class PrintPreview {
     const numberFontSize = this.cellNumberFontSize() * 2;
     const nameFontSize = this.cellNameFontSize() * 2;
 
-    const sections = cards.map((card) => this.createCardSection(card, isPortrait, pageSize, margin, gridSize, cellWidth, cellHeight, displayMode, numberFontSize, nameFontSize, tableWidthTwips));
+    const sections = cards.map((card) =>
+      this.createCardSection(
+        card,
+        isPortrait,
+        pageSize,
+        margin,
+        gridSize,
+        cellWidth,
+        cellHeight,
+        displayMode,
+        numberFontSize,
+        nameFontSize,
+        tableWidthTwips,
+      ),
+    );
 
     const doc: Document = new Document({
       sections,
@@ -581,7 +701,7 @@ export class PrintPreview {
     displayMode: DisplayMode,
     numberFontSize: number,
     nameFontSize: number,
-    tableWidthTwips: number
+    tableWidthTwips: number,
   ) {
     const tableRows: TableRow[] = [];
 
@@ -604,7 +724,7 @@ export class PrintPreview {
                 }),
               ],
               alignment: AlignmentType.CENTER,
-            })
+            }),
           );
         } else if (displayMode === 'name') {
           cellChildren.push(
@@ -616,7 +736,7 @@ export class PrintPreview {
                 }),
               ],
               alignment: AlignmentType.CENTER,
-            })
+            }),
           );
         } else {
           cellChildren.push(
@@ -639,7 +759,7 @@ export class PrintPreview {
                 }),
               ],
               alignment: AlignmentType.CENTER,
-            })
+            }),
           );
         }
 
@@ -648,14 +768,14 @@ export class PrintPreview {
             children: cellChildren,
             width: { size: cellWidth, type: WidthType.DXA },
             verticalAlign: 'center',
-          })
+          }),
         );
       }
       tableRows.push(
         new TableRow({
           children: cells,
           height: { value: cellHeight, rule: 'exact' },
-        })
+        }),
       );
     }
 
