@@ -303,34 +303,7 @@ export class PrintPreview {
         // Don't ignore any elements
         ignoreElements: () => false,
         // Ensure images are loaded at full quality
-        onclone: (clonedDoc: unknown, element: HTMLElement) => {
-          const doc = clonedDoc as globalThis.Document;
-
-          // Fix text positioning for html2canvas rendering
-          // Compensate for text baseline shift in canvas
-          const textElements = doc.querySelectorAll(
-            '.print-card-number, .print-cell-number, .print-cell-name',
-          );
-          textElements.forEach((el) => {
-            const htmlEl = el as HTMLElement;
-            htmlEl.style.transform = 'translateY(-10px)';
-          });
-
-          // Ensure images are loaded
-          const images = doc.querySelectorAll('img');
-          return Promise.all(
-            Array.from(images).map((img) => {
-              const htmlImg = img as HTMLImageElement;
-              if (htmlImg.complete) {
-                return Promise.resolve();
-              }
-              return new Promise<void>((resolve) => {
-                htmlImg.onload = () => resolve();
-                htmlImg.onerror = () => resolve();
-              });
-            }),
-          );
-        },
+        onclone: this.html2canvasOnCloneCallback.bind(this),
       });
 
       // Convert canvas to blob for maximum quality (JPEG for smaller file size)
@@ -375,50 +348,30 @@ export class PrintPreview {
 
     await saveCard(0);
   }
-
   protected async saveCardsAsJpg(): Promise<void> {
     const cards = this.bingoCards();
     if (cards.length === 0) return;
 
     this.isCancelling.set(false);
-
-    const totalCards = cards.length;
-    let savedCount = 0;
-
     this.isPrinting.set(true);
     this.printedCount.set(0);
 
-    const saveCard = async (index: number) => {
-      if (this.isCancelling()) {
-        // Already saved files are downloaded, just stop the process
-        console.log(`Saved ${savedCount} cards before cancellation`);
-        this.isPrinting.set(false);
-        this.printedCount.set(0);
-        this.isCancelling.set(false);
-        return;
-      }
+    // 🔥 Оптимизация 1: Scale 2–3 достаточно для чёткой печати A4.
+    // Scale 6 создаёт изображения 3500×5000px, что грузит CPU/Память без необходимости.
+    const qualityScale = 2.5;
+    const jpegQuality = 0.85; // 0.95 → 0.85 экономит ~30% размера без потери визуального качества
+    const totalCards = cards.length;
+    let savedCount = 0;
 
-      if (index >= totalCards) {
-        this.isPrinting.set(false);
-        this.printedCount.set(0);
-        this.isCancelling.set(false);
-        return;
-      }
+    for (let i = 0; i < totalCards; i++) {
+      if (this.isCancelling()) break;
 
-      this.currentIndex.set(index);
-
-      // Даём DOM обновиться
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      this.currentIndex.set(i);
+      // Ждём завершения рендеринга Angular и браузера
+      await new Promise((resolve) => setTimeout(resolve, 80));
 
       const cardElement = document.querySelector('.print-page') as HTMLElement;
-      if (!cardElement) return;
-
-      const card = cards[index];
-
-      // Calculate scale for high quality (300+ DPI target)
-      // A4 at 300 DPI = 2480 x 3508 pixels (portrait)
-      // Using scale 6 for maximum quality
-      const qualityScale = 3;
+      if (!cardElement) continue;
 
       const canvas = await html2canvas(cardElement, {
         scale: qualityScale,
@@ -426,65 +379,159 @@ export class PrintPreview {
         allowTaint: true,
         backgroundColor: '#ffffff',
         logging: false,
-        imageTimeout: 30000,
+        imageTimeout: 10000,
         removeContainer: true,
-        // Don't ignore any elements
         ignoreElements: () => false,
-        // Ensure images are loaded at full quality
-        onclone: (clonedDoc: unknown, element: HTMLElement) => {
-          const doc = clonedDoc as globalThis.Document;
-
-          // Fix text positioning for html2canvas rendering
-          // Compensate for text baseline shift in canvas
-          const textElements = doc.querySelectorAll(
-            '.print-card-number, .print-cell-number, .print-cell-name',
-          );
-          textElements.forEach((el) => {
-            const htmlEl = el as HTMLElement;
-            htmlEl.style.transform = 'translateY(-10px)';
-          });
-
-          // Ensure images are loaded
-          const images = doc.querySelectorAll('img');
-          return Promise.all(
-            Array.from(images).map((img) => {
-              const htmlImg = img as HTMLImageElement;
-              if (htmlImg.complete) {
-                return Promise.resolve();
-              }
-              return new Promise<void>((resolve) => {
-                htmlImg.onload = () => resolve();
-                htmlImg.onerror = () => resolve();
-              });
-            }),
-          );
-        },
+        onclone: this.html2canvasOnCloneCallback.bind(this),
       });
 
-      // 🔥 ДОБАВЬТЕ ЭТОТ БЛОК: обрезка канваса до точных размеров
       const expectedWidth = Math.round(cardElement.offsetWidth * qualityScale);
       const expectedHeight = Math.round(cardElement.offsetHeight * qualityScale);
       const finalCanvas = this.trimCanvasToExpectedSize(canvas, expectedWidth, expectedHeight, 6);
 
-      // 🔥 ИСПОЛЬЗУЙТЕ finalCanvas ВМЕСТО canvas НИЖЕ:
-      const link = document.createElement('a');
-      link.download = `bingo-card-${card.id}.jpg`;
-      link.href = finalCanvas.toDataURL('image/jpeg', 0.95); // 👈 было canvas.toDataURL
-      link.click();
+      // 🔥 Оптимизация 2: БЛОБ вместо Base64. Память снижается в ~4 раза.
+      const blob = await new Promise<Blob | null>((resolve) =>
+        finalCanvas.toBlob(resolve, 'image/jpeg', jpegQuality),
+      );
 
-      // const link = document.createElement('a');
-      // link.download = `bingo-card-${card.id}.jpg`;
-      // link.href = canvas.toDataURL('image/jpeg', 0.95);
-      // link.click();
+      if (blob) {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `bingo-card-${cards[i].id}.jpg`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        // Мгновенно освобождаем память от временного URL
+        setTimeout(() => URL.revokeObjectURL(url), 100);
+      }
+
+      // 🔥 Оптимизация 3: Принудительная очистка канвасов для GC
+      finalCanvas.width = 0;
+      finalCanvas.height = 0;
+      (canvas as HTMLCanvasElement).width = 0;
+      (canvas as HTMLCanvasElement).height = 0;
 
       savedCount++;
-      this.printedCount.set(index + 1);
+      this.printedCount.set(savedCount);
 
-      await saveCard(index + 1);
-    };
+      // 🔥 Оптимизация 4: Yield для Event Loop. Браузер успевает собрать мусор и обновить UI
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
 
-    await saveCard(0);
+    this.isPrinting.set(false);
+    this.printedCount.set(0);
+    this.isCancelling.set(false);
   }
+  // protected async saveCardsAsJpgOld(): Promise<void> {
+  //   const cards = this.bingoCards();
+  //   if (cards.length === 0) return;
+
+  //   this.isCancelling.set(false);
+
+  //   const totalCards = cards.length;
+  //   let savedCount = 0;
+
+  //   this.isPrinting.set(true);
+  //   this.printedCount.set(0);
+
+  //   const saveCard = async (index: number) => {
+  //     if (this.isCancelling()) {
+  //       // Already saved files are downloaded, just stop the process
+  //       console.log(`Saved ${savedCount} cards before cancellation`);
+  //       this.isPrinting.set(false);
+  //       this.printedCount.set(0);
+  //       this.isCancelling.set(false);
+  //       return;
+  //     }
+
+  //     if (index >= totalCards) {
+  //       this.isPrinting.set(false);
+  //       this.printedCount.set(0);
+  //       this.isCancelling.set(false);
+  //       return;
+  //     }
+
+  //     this.currentIndex.set(index);
+
+  //     // Даём DOM обновиться
+  //     await new Promise((resolve) => setTimeout(resolve, 200));
+
+  //     const cardElement = document.querySelector('.print-page') as HTMLElement;
+  //     if (!cardElement) return;
+
+  //     const card = cards[index];
+
+  //     // Calculate scale for high quality (300+ DPI target)
+  //     // A4 at 300 DPI = 2480 x 3508 pixels (portrait)
+  //     // Using scale 6 for maximum quality
+  //     const qualityScale = 3;
+
+  //     const canvas = await html2canvas(cardElement, {
+  //       scale: qualityScale,
+  //       useCORS: true,
+  //       allowTaint: true,
+  //       backgroundColor: '#ffffff',
+  //       logging: false,
+  //       imageTimeout: 30000,
+  //       removeContainer: true,
+  //       // Don't ignore any elements
+  //       ignoreElements: () => false,
+  //       // Ensure images are loaded at full quality
+  //       onclone: (clonedDoc: unknown, element: HTMLElement) => {
+  //         const doc = clonedDoc as globalThis.Document;
+
+  //         // Fix text positioning for html2canvas rendering
+  //         // Compensate for text baseline shift in canvas
+  //         const textElements = doc.querySelectorAll(
+  //           '.print-card-number, .print-cell-number, .print-cell-name',
+  //         );
+  //         textElements.forEach((el) => {
+  //           const htmlEl = el as HTMLElement;
+  //           htmlEl.style.transform = 'translateY(-10px)';
+  //         });
+
+  //         // Ensure images are loaded
+  //         const images = doc.querySelectorAll('img');
+  //         return Promise.all(
+  //           Array.from(images).map((img) => {
+  //             const htmlImg = img as HTMLImageElement;
+  //             if (htmlImg.complete) {
+  //               return Promise.resolve();
+  //             }
+  //             return new Promise<void>((resolve) => {
+  //               htmlImg.onload = () => resolve();
+  //               htmlImg.onerror = () => resolve();
+  //             });
+  //           }),
+  //         );
+  //       },
+  //     });
+
+  //     // 🔥 ДОБАВЬТЕ ЭТОТ БЛОК: обрезка канваса до точных размеров
+  //     const expectedWidth = Math.round(cardElement.offsetWidth * qualityScale);
+  //     const expectedHeight = Math.round(cardElement.offsetHeight * qualityScale);
+  //     const finalCanvas = this.trimCanvasToExpectedSize(canvas, expectedWidth, expectedHeight, 6);
+
+  //     // 🔥 ИСПОЛЬЗУЙТЕ finalCanvas ВМЕСТО canvas НИЖЕ:
+  //     const link = document.createElement('a');
+  //     link.download = `bingo-card-${card.id}.jpg`;
+  //     link.href = finalCanvas.toDataURL('image/jpeg', 0.95); // 👈 было canvas.toDataURL
+  //     link.click();
+
+  //     // const link = document.createElement('a');
+  //     // link.download = `bingo-card-${card.id}.jpg`;
+  //     // link.href = canvas.toDataURL('image/jpeg', 0.95);
+  //     // link.click();
+
+  //     savedCount++;
+  //     this.printedCount.set(index + 1);
+
+  //     await saveCard(index + 1);
+  //   };
+
+  //   await saveCard(0);
+  // }
 
   protected async saveCurrentCardAsPdf(): Promise<void> {
     const currentCard = this.currentCard();
@@ -519,29 +566,7 @@ export class PrintPreview {
       imageTimeout: 30000,
       removeContainer: true,
       ignoreElements: () => false,
-      onclone: (clonedDoc: unknown) => {
-        const doc = clonedDoc as globalThis.Document;
-        const textElements = doc.querySelectorAll(
-          '.print-card-number, .print-cell-number, .print-cell-name',
-        );
-        textElements.forEach((el) => {
-          const htmlEl = el as HTMLElement;
-          htmlEl.style.transform = 'translateY(-10px)';
-        });
-        const images = doc.querySelectorAll('img');
-        return Promise.all(
-          Array.from(images).map((img) => {
-            const htmlImg = img as HTMLImageElement;
-            if (htmlImg.complete) {
-              return Promise.resolve();
-            }
-            return new Promise<void>((resolve) => {
-              htmlImg.onload = () => resolve();
-              htmlImg.onerror = () => resolve();
-            });
-          }),
-        );
-      },
+      onclone: this.html2canvasOnCloneCallback.bind(this),
     });
 
     const imgData = await new Promise<string>((resolve) => {
@@ -592,29 +617,7 @@ export class PrintPreview {
       imageTimeout: 30000,
       removeContainer: true,
       ignoreElements: () => false,
-      onclone: (clonedDoc: unknown) => {
-        const doc = clonedDoc as globalThis.Document;
-        const textElements = doc.querySelectorAll(
-          '.print-card-number, .print-cell-number, .print-cell-name',
-        );
-        textElements.forEach((el) => {
-          const htmlEl = el as HTMLElement;
-          htmlEl.style.transform = 'translateY(-10px)';
-        });
-        const images = doc.querySelectorAll('img');
-        return Promise.all(
-          Array.from(images).map((img) => {
-            const htmlImg = img as HTMLImageElement;
-            if (htmlImg.complete) {
-              return Promise.resolve();
-            }
-            return new Promise<void>((resolve) => {
-              htmlImg.onload = () => resolve();
-              htmlImg.onerror = () => resolve();
-            });
-          }),
-        );
-      },
+      onclone: this.html2canvasOnCloneCallback.bind(this),
     });
 
     // 🔥 Обрезка
@@ -822,5 +825,35 @@ export class PrintPreview {
       default:
         return `${cell.number}. ${cell.name}`;
     }
+  }
+
+  private html2canvasOnCloneCallback(
+    clonedDoc: unknown,
+    _clonedElement: HTMLElement,
+  ): Promise<void> {
+    const doc = clonedDoc as globalThis.Document;
+
+    // Корректировка позиционирования текста
+    doc
+      .querySelectorAll<HTMLElement>('.print-card-number, .print-cell-number, .print-cell-name')
+      .forEach((el) => {
+        el.style.transform = 'translateY(-10px)';
+      });
+
+    // Ожидание полной загрузки изображений
+    const images = Array.from(doc.querySelectorAll<HTMLImageElement>('img'));
+    const imagePromises = images.map((img) =>
+      img.complete
+        ? Promise.resolve()
+        : new Promise<void>((resolve) => {
+            img.onload = () => resolve();
+            img.onerror = () => resolve();
+          }),
+    );
+
+    // 🔥 ИСПРАВЛЕНИЕ TS2322:
+    // Promise.all() возвращает Promise<void[]>, а нужен Promise<void>.
+    // .then(() => {}) преобразует тип, сохраняя логику ожидания.
+    return Promise.all(imagePromises).then(() => {});
   }
 }
